@@ -2,11 +2,9 @@ package tabulon
 
 import (
 	"os"
-//	"bufio"
 	"log"
 	"strings"
 	"fmt"
-//	"regexp"
 	"io"
 	"encoding/csv"
 )
@@ -15,14 +13,25 @@ type Table struct {
 	header []string
 	content [][]string
 	match []string
-	delimiter string
+	delimiter rune
 	nrows int
 	ncols int
 	limits []int
 }
 
+func NewTable() (Table) {
+	t := Table{
+		delimiter: ',',
+		header: nil,
+		content: nil,
+		nrows: 0,
+		ncols: 0,
+	}
+
+	return t
+}
+
 func (table* Table) Clear() {
-	table.delimiter = ","
 	table.header = nil
 	table.content = nil
 	table.nrows = 0
@@ -94,7 +103,22 @@ func (table* Table) ReadFiles(files []string) {
 		}
 
 		r := csv.NewReader(fd)
+		r.Comma = table.delimiter
 		table.processFile(r)
 	}
 	table.calcLimits()
+}
+
+func (table* Table) calcLimits() {
+	ncols := len(table.header)
+	table.limits = make([]int, ncols)
+	for j,cell := range(table.header) {
+		table.limits[j] = int_max(table.limits[j], len(cell))
+	}
+	
+	for _,row := range(table.content) {
+		for j,cell := range(row) {
+			table.limits[j] = int_max(table.limits[j], len(cell))
+		}
+	}
 }

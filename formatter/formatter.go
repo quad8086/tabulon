@@ -11,7 +11,7 @@ func Run() {
 		Stdin bool `short:"S" long:"stdin" description:"read from stdin"`
 		Match []string `short:"m" long:"match" description:"match string"`
 		Plain bool `short:"p" long:"plain" description:"dump output, no ui"`
-		Delimiter string `short:"d" long:"delimiter" description:"delimiter"`
+//		Delimiter rune `short:"d" long:"delimiter" description:"delimiter"`
 		Skip int `long:"skip" description:"skip initial N lines"`
 	}
 
@@ -25,9 +25,8 @@ func Run() {
 		log.Fatal("no input; please supply filenames or enable stdin")
 	}
 
-	var table Table
+	table := NewTable()
 	table.match = opts.Match
-	table.delimiter = opts.Delimiter
 	
 	if opts.Stdin {
 		table.ReadStdin()
@@ -36,9 +35,9 @@ func Run() {
 	}
 
 	if opts.Plain {
-		table.RenderPlain()
+		table.RenderPlaintext()
 	} else {
-		table.RenderTCell()
+		table.RenderTerminal()
 	}
 	os.Exit(0)
 }
