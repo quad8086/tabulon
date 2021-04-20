@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"encoding/csv"
+	"path"
 )
 
 type Table struct {
@@ -17,6 +18,7 @@ type Table struct {
 	nrows int
 	ncols int
 	limits []int
+	description string
 }
 
 func NewTable() (Table) {
@@ -88,13 +90,19 @@ func (table* Table) processFile(r* csv.Reader) {
 
 func (table* Table) ReadStdin() {
 	table.Clear()
+	table.description = "stdin"
 	r := csv.NewReader(os.Stdin)
 	table.processFile(r)
 	table.calcLimits()
 }
 
 func (table* Table) ReadFiles(files []string) {
+	if len(files)==0 {
+		log.Fatal("ReadFiles: no files to read")
+	}
+	
 	table.header = nil
+	table.description = path.Base(files[0])
 	
 	for _,file := range files {
 		fd, err := os.Open(file)

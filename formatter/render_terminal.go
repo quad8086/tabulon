@@ -71,35 +71,25 @@ func tcell_render(table* Table, term* Terminal, yview int) (int) {
 
 	style_normal := tcell.StyleDefault
 	style_underl := tcell.StyleDefault.Underline(true)
-	content_index := 0
-	for y:=0; y<term.yscreen-1; y++ {
-		if(y==0) {
-			if(term.have_status) {
-				tcell_line(term.screen, 0, y, fmt.Sprintf("status %d %d %d", table.nrows, table.ncols,
-					yview), style_underl)
-			} else if(term.have_header) {
-				tcell_row(term.screen, 0, y, table.header, table.limits, style_underl)
-			}
-			continue
-		}
+	y_header := 0
+	y_status := term.yscreen-1
+	tcell_row(term.screen, 0, y_header, table.header, table.limits, style_underl)
 
-		if((y==1 && term.have_status && term.have_header)) {
-			tcell_row(term.screen, 0, y, table.header, table.limits, style_underl)
-			continue
-		}
-			
+	content_index := 0
+	for y:=1; y<y_status; y++ {
 		tcell_row(term.screen, 0, y, table.content[yview + content_index], table.limits,
 			style_normal)
 		content_index++
 	}
 	
+	tcell_line(term.screen, 0, y_status, fmt.Sprintf("%s: nrows=%d ncols=%d yview=%d",
+		table.description, table.nrows, table.ncols, yview), style_underl)
 	term.screen.Show()
 	return yview
 }
 
 func (term* Terminal) Run(table* Table) {	
 	yview := 0
-	yscreen := term.yscreen
 	s:= term.screen
 	
 	for {
@@ -107,7 +97,7 @@ func (term* Terminal) Run(table* Table) {
 		switch ev := s.PollEvent().(type) {
 		case *tcell.EventResize:
 			s.Sync()
-			_, yscreen = s.Size()
+			_, term.yscreen = s.Size()
 			
 		case *tcell.EventKey:
 			if ev.Key() == tcell.KeyEscape || ev.Rune()=='q' {
@@ -124,11 +114,11 @@ func (term* Terminal) Run(table* Table) {
 			}
 
 			if ev.Key() == tcell.KeyPgDn || ev.Rune()==' ' {
-				yview = yview+yscreen
+				yview = yview+term.yscreen
 			}
 
 			if ev.Key() == tcell.KeyPgUp || ev.Rune()=='b' {
-				yview = yview-yscreen
+				yview = yview-term.yscreen
 			}
 
 			if ev.Key() == tcell.KeyHome || ev.Rune()=='0' {
@@ -136,11 +126,15 @@ func (term* Terminal) Run(table* Table) {
 			}
 
 			if ev.Key() == tcell.KeyEnd || ev.Rune()=='G' {
-				yview = table.nrows - yscreen
+				yview = table.nrows - term.yscreen
 			}
 
 			if ev.Rune() == 'S' {
 				term.have_status = !term.have_status
+			}
+
+			if ev.Rune() == 'H' {
+				term.have_header = !term.have_header
 			}
 		}
 	}
