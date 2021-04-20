@@ -8,8 +8,6 @@ import (
 )
 
 type Terminal struct {
-	have_header bool
-	have_status bool
 	yheader int
 	ystatus int
 	xscreen int
@@ -19,8 +17,6 @@ type Terminal struct {
 
 func NewTerminal() (Terminal) {
 	t := Terminal{
-		have_header: true,
-		have_status: true,
 		yheader: 0,
 		ystatus: 0,
 	}
@@ -63,8 +59,8 @@ func tcell_row(s tcell.Screen, x, y int, row []string, lim []int, style tcell.St
 func tcell_render(table* Table, term* Terminal, yview int) (int) {
 	term.screen.Clear()
 
-	ylim_hi := table.nrows - term.yscreen
-	yview = int_max(0, yview)	
+	ylim_hi := table.nrows-1
+	yview = int_max(0, yview)
 	if yview>ylim_hi {
 		yview = ylim_hi
 	}
@@ -75,15 +71,23 @@ func tcell_render(table* Table, term* Terminal, yview int) (int) {
 	y_status := term.yscreen-1
 	tcell_row(term.screen, 0, y_header, table.header, table.limits, style_underl)
 
+	empty_row := []string{"~"}
 	content_index := 0
 	for y:=1; y<y_status; y++ {
-		tcell_row(term.screen, 0, y, table.content[yview + content_index], table.limits,
-			style_normal)
+		idx := yview + content_index
+		row := empty_row
+		if idx>=0 && idx<=ylim_hi {
+			row = table.content[idx]
+		}
+		
+		tcell_row(term.screen, 0, y, row, table.limits, style_normal)
 		content_index++
 	}
 	
-	tcell_line(term.screen, 0, y_status, fmt.Sprintf("%s: nrows=%d ncols=%d yview=%d",
-		table.description, table.nrows, table.ncols, yview), style_underl)
+	tcell_line(term.screen, 0, y_status,
+		fmt.Sprintf("%s: nrows=%d ncols=%d yview=%d xscreen=%d yscreen=%d",
+			table.description, table.nrows, table.ncols, yview, term.xscreen, term.yscreen),
+		style_underl)
 	term.screen.Show()
 	return yview
 }
@@ -100,7 +104,7 @@ func (term* Terminal) Run(table* Table) {
 			_, term.yscreen = s.Size()
 			
 		case *tcell.EventKey:
-			if ev.Key() == tcell.KeyEscape || ev.Rune()=='q' {
+			if ev.Key() == tcell.KeyEscape || ev.Rune()=='q' || ev.Rune()=='Q' {
 				s.Fini()
 				os.Exit(0)
 			}
@@ -127,14 +131,6 @@ func (term* Terminal) Run(table* Table) {
 
 			if ev.Key() == tcell.KeyEnd || ev.Rune()=='G' {
 				yview = table.nrows - term.yscreen
-			}
-
-			if ev.Rune() == 'S' {
-				term.have_status = !term.have_status
-			}
-
-			if ev.Rune() == 'H' {
-				term.have_header = !term.have_header
 			}
 		}
 	}

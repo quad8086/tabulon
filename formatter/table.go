@@ -19,6 +19,7 @@ type Table struct {
 	ncols int
 	limits []int
 	description string
+	skip int
 }
 
 func NewTable() (Table) {
@@ -38,6 +39,7 @@ func (table* Table) Clear() {
 	table.content = nil
 	table.nrows = 0
 	table.ncols = 0
+	table.skip = 0
 }
 
 func filter_record(rec []string, match []string) (bool) {
@@ -56,6 +58,7 @@ func filter_record(rec []string, match []string) (bool) {
 }
 
 func (table* Table) processFile(r* csv.Reader) {
+	skip := table.skip
 	for {
 		rec, err := r.Read()
 		if err == io.EOF {
@@ -64,7 +67,11 @@ func (table* Table) processFile(r* csv.Reader) {
 		if err != nil {
 			log.Fatal(err)
 		}
-			
+		if skip>0 {
+			skip--
+			continue
+		}
+		
 		if table.header==nil {
 			table.header = rec
 			table.ncols = len(table.header)
@@ -107,7 +114,7 @@ func (table* Table) ReadFiles(files []string) {
 	for _,file := range files {
 		fd, err := os.Open(file)
 		if err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 
 		r := csv.NewReader(fd)
