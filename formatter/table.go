@@ -4,9 +4,7 @@ import (
 	"os"
 	"log"
 	"strings"
-	"fmt"
-	"io"
-	"encoding/csv"
+	"bufio"
 	"path"
 )
 
@@ -23,7 +21,7 @@ type Table struct {
 }
 
 func NewTable() (Table) {
-	t := Table{
+	t := Table {
 		delimiter: ',',
 		header: nil,
 		content: nil,
@@ -50,6 +48,20 @@ func (table* Table) Clear() {
 	table.skip = 0
 }
 
+func (table* Table) calcLimits() {
+	ncols := len(table.header)
+	table.limits = make([]int, ncols)
+	for j,cell := range(table.header) {
+		table.limits[j] = int_max(table.limits[j], len(cell))
+	}
+
+	for _,row := range(table.content) {
+		for j,cell := range(row) {
+			table.limits[j] = int_max(table.limits[j], len(cell))
+		}
+	}
+}
+
 func filter_record(rec []string, match []string) (bool) {
 	if len(match) == 0 {
 		return false
@@ -65,40 +77,29 @@ func filter_record(rec []string, match []string) (bool) {
 	return false
 }
 
-func (table* Table) processFile(r* csv.Reader) {
+func (table* Table) processFile(fd* os.File) {
 	skip := table.skip
-	for {
-		rec, err := r.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			log.Fatal(err)
-		}
+	scanner := bufio.NewScanner(fd)
+	scanner.Split(bufio.ScanLines)
+	reader := NewCSVReader()
+	for scanner.Scan() {
 		if skip>0 {
 			skip--
 			continue
 		}
 
+		row := reader.ParseLine(scanner.Text())
 		if table.header==nil {
-			table.header = rec
+			table.header = reader.GetHeader()
 			table.ncols = len(table.header)
 			continue
 		}
 
-		if len(rec) != table.ncols {
-			fmt.Printf("skipping record %s\n", rec)
-			for _,a := range(rec) {
-				fmt.Println(a)
-			}
+		if filter_record(row, table.match) {
 			continue
 		}
 
-		if filter_record(rec, table.match) {
-			continue
-		}
-
-		table.content = append(table.content, rec)
+		table.content = append(table.content, row)
 	}
 	table.nrows = len(table.content)
 }
@@ -106,13 +107,12 @@ func (table* Table) processFile(r* csv.Reader) {
 func (table* Table) ReadStdin() {
 	table.Clear()
 	table.description = "stdin"
-	r := csv.NewReader(os.Stdin)
-	table.processFile(r)
+	table.processFile(os.Stdin)
 	table.calcLimits()
 }
 
 func (table* Table) ReadFiles(files []string) {
-	if len(files)==0 {
+	if files==nil || len(files)==0 {
 		log.Fatal("ReadFiles: no files to read")
 	}
 
@@ -125,23 +125,8 @@ func (table* Table) ReadFiles(files []string) {
 			log.Fatal(err)
 		}
 
-		r := csv.NewReader(fd)
-		r.Comma = table.delimiter
-		table.processFile(r)
+		table.processFile(fd)
+		fd.Close()
 	}
 	table.calcLimits()
-}
-
-func (table* Table) calcLimits() {
-	ncols := len(table.header)
-	table.limits = make([]int, ncols)
-	for j,cell := range(table.header) {
-		table.limits[j] = int_max(table.limits[j], len(cell))
-	}
-
-	for _,row := range(table.content) {
-		for j,cell := range(row) {
-			table.limits[j] = int_max(table.limits[j], len(cell))
-		}
-	}
 }
