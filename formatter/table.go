@@ -34,6 +34,14 @@ func NewTable() (Table) {
 	return t
 }
 
+func (table* Table) SetMatch(m []string) {
+	table.match = m
+}
+
+func (table* Table) SetSkip(skip int) {
+	table.skip = skip
+}
+
 func (table* Table) Clear() {
 	table.header = nil
 	table.content = nil
@@ -53,7 +61,7 @@ func filter_record(rec []string, match []string) (bool) {
 			return true
 		}
 	}
-		
+
 	return false
 }
 
@@ -71,13 +79,13 @@ func (table* Table) processFile(r* csv.Reader) {
 			skip--
 			continue
 		}
-		
+
 		if table.header==nil {
 			table.header = rec
 			table.ncols = len(table.header)
 			continue
 		}
-	
+
 		if len(rec) != table.ncols {
 			fmt.Printf("skipping record %s\n", rec)
 			for _,a := range(rec) {
@@ -89,7 +97,7 @@ func (table* Table) processFile(r* csv.Reader) {
 		if filter_record(rec, table.match) {
 			continue
 		}
-		
+
 		table.content = append(table.content, rec)
 	}
 	table.nrows = len(table.content)
@@ -107,10 +115,10 @@ func (table* Table) ReadFiles(files []string) {
 	if len(files)==0 {
 		log.Fatal("ReadFiles: no files to read")
 	}
-	
+
 	table.header = nil
 	table.description = path.Base(files[0])
-	
+
 	for _,file := range files {
 		fd, err := os.Open(file)
 		if err != nil {
@@ -130,7 +138,7 @@ func (table* Table) calcLimits() {
 	for j,cell := range(table.header) {
 		table.limits[j] = int_max(table.limits[j], len(cell))
 	}
-	
+
 	for _,row := range(table.content) {
 		for j,cell := range(row) {
 			table.limits[j] = int_max(table.limits[j], len(cell))
