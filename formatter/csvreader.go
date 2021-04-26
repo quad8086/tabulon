@@ -60,6 +60,10 @@ func normalize(row []string, ncols int) ([]string) {
 	return row
 }
 
+func (c* CSVReader) SetDelimiter(d rune) {
+	c.delimiter = d
+}
+
 func (c* CSVReader) GetHeader() ([]string) {
 	return c.header
 }

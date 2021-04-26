@@ -5,6 +5,7 @@ import (
 	"log"
 	"github.com/jessevdk/go-flags"
 	"tabulon/formatter"
+	"fmt"
 )
 
 func main() {
@@ -14,10 +15,12 @@ func main() {
 		Plain bool `short:"p" long:"plain" description:"render to stdout as plaintext"`
 		CSV string `short:"C" long:"csv" description:"render as csv file"`
 		Skip int `short:"s" long:"skip" description:"skip N lines before load" default:"0"`
+		Delimiter string `short:"d" long:"delimiter" description:"set delimiter" default:""`
 	}
 
 	args, err := flags.ParseArgs(&opts, os.Args)
 	if err != nil {
+		fmt.Println(err)
 		os.Exit(1)
 	}
 
@@ -29,6 +32,9 @@ func main() {
 	table := tabulon.NewTable()
 	table.SetMatch(opts.Match)
 	table.SetSkip(opts.Skip)
+	if(len(opts.Delimiter)>0) {
+		table.SetDelimiter(rune(opts.Delimiter[0]))
+	}
 
 	if opts.Stdin {
 		table.ReadStdin()

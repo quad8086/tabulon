@@ -40,6 +40,10 @@ func (table* Table) SetSkip(skip int) {
 	table.skip = skip
 }
 
+func (table* Table) SetDelimiter(d rune) {
+	table.delimiter = d
+}
+
 func (table* Table) Clear() {
 	table.header = nil
 	table.content = nil
@@ -62,13 +66,13 @@ func (table* Table) calcLimits() {
 	}
 }
 
-func filter_record(rec []string, match []string) (bool) {
-	if len(match) == 0 {
+func filter_record(rec []string, t* Table) (bool) {
+	if len(t.match) == 0 {
 		return false
 	}
 
-	line := strings.Join(rec, ",")
-	for _,m := range(match) {
+	line := strings.Join(rec, string(t.delimiter))
+	for _,m := range(t.match) {
 		if !strings.Contains(line, m) {
 			return true
 		}
@@ -82,6 +86,8 @@ func (table* Table) processFile(fd* os.File) {
 	scanner := bufio.NewScanner(fd)
 	scanner.Split(bufio.ScanLines)
 	reader := NewCSVReader()
+	reader.SetDelimiter(table.delimiter)
+	
 	for scanner.Scan() {
 		if skip>0 {
 			skip--
@@ -95,7 +101,7 @@ func (table* Table) processFile(fd* os.File) {
 			continue
 		}
 
-		if filter_record(row, table.match) {
+		if filter_record(row, table) {
 			continue
 		}
 
