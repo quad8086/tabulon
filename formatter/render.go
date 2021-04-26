@@ -3,7 +3,6 @@ package tabulon
 import (
 	"os"
 	"strings"
-	"log"
 )
 
 func (table* Table) RenderPlaintext() {
@@ -18,15 +17,12 @@ func (table* Table) RenderTerminal() {
 	term.Run(table)
 }
 
-func (table* Table) RenderCSV(fname string) {
-	fd,err := os.Create(fname)
-	if err!=nil {
-		log.Fatal(err)
-	}
-	
-	fd.Write([]byte(strings.Join(table.header, ",") + "\n"))
+func (table* Table) RenderCSV() {
+	fd := os.Stdout
+	d := string(table.output_delimiter)
+	fd.Write([]byte(strings.Join(table.header, d) + "\n"))
 	for _,row := range(table.content) {
-		fd.Write([]byte(strings.Join(row, ",") + "\n"))
+		fd.Write([]byte(strings.Join(row, d) + "\n"))
 	}
 	fd.Close()
 }

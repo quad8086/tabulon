@@ -13,6 +13,7 @@ type Table struct {
 	content [][]string
 	match []string
 	delimiter rune
+	output_delimiter rune
 	nrows int
 	ncols int
 	limits []int
@@ -27,6 +28,7 @@ func NewTable() (Table) {
 		content: nil,
 		nrows: 0,
 		ncols: 0,
+		output_delimiter: ',',
 	}
 
 	return t
@@ -42,6 +44,10 @@ func (table* Table) SetSkip(skip int) {
 
 func (table* Table) SetDelimiter(d rune) {
 	table.delimiter = d
+}
+
+func (table* Table) SetOutputDelimiter(d rune) {
+	table.output_delimiter = d
 }
 
 func (table* Table) Clear() {

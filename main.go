@@ -13,9 +13,10 @@ func main() {
 		Stdin bool `short:"S" long:"stdin" description:"read from stdin"`
 		Match []string `short:"m" long:"match" description:"match string"`
 		Plain bool `short:"p" long:"plain" description:"render to stdout as plaintext"`
-		CSV string `short:"C" long:"csv" description:"render as csv file"`
+		CSV bool `short:"C" long:"csv" description:"render as csv file to stdout"`
 		Skip int `short:"s" long:"skip" description:"skip N lines before load" default:"0"`
 		Delimiter string `short:"d" long:"delimiter" description:"set delimiter" default:""`
+		OutputDelimiter string `short:"D" long:"output-delimiter" description:"set output delimiter" default:""`
 	}
 
 	args, err := flags.ParseArgs(&opts, os.Args)
@@ -35,7 +36,10 @@ func main() {
 	if(len(opts.Delimiter)>0) {
 		table.SetDelimiter(rune(opts.Delimiter[0]))
 	}
-
+	if(len(opts.OutputDelimiter)>0) {
+		table.SetOutputDelimiter(rune(opts.OutputDelimiter[0]))
+	}
+	
 	if opts.Stdin {
 		table.ReadStdin()
 	} else {
@@ -44,8 +48,8 @@ func main() {
 
 	if opts.Plain {
 		table.RenderPlaintext()
-	} else if len(opts.CSV)>0 {
-		table.RenderCSV(opts.CSV)
+	} else if opts.CSV {
+		table.RenderCSV()
 	} else {
 		table.RenderTerminal()
 	}
