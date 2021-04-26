@@ -1,4 +1,4 @@
-package tabulon
+package main
 
 import (
 	"os"
@@ -7,7 +7,7 @@ import (
 	"tabulon/formatter"
 )
 
-func Run() {
+func main() {
 	var opts struct {
 		Stdin bool `short:"S" long:"stdin" description:"read from stdin"`
 		Match []string `short:"m" long:"match" description:"match string"`

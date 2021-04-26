@@ -130,3 +130,29 @@ func (table* Table) ReadFiles(files []string) {
 	}
 	table.calcLimits()
 }
+
+func (table* Table) Search(yorig int, s string) (int) {
+	for y:=yorig+1; y<len(table.content); y++ {
+		row := table.content[y]
+		for _,cell := range(row) {
+			if(strings.Contains(cell, s)) {
+				return y
+			}
+		}
+	}
+
+	return yorig
+}
+
+func (table* Table) SearchReverse(yorig int, s string) (int) {
+	for y:=yorig-1; y>=0; y-- {
+		row := table.content[y]
+		for _,cell := range(row) {
+			if(strings.Contains(cell, s)) {
+				return y
+			}
+		}
+	}
+
+	return yorig
+}
