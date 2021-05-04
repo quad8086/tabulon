@@ -56,8 +56,11 @@ func tcell_line(s tcell.Screen, x, y int, line string, style tcell.Style) {
 	}
 }
 
-func tcell_row(s tcell.Screen, x, y int, row []string, lim []int, style tcell.Style) {
+func tcell_row(s tcell.Screen, x, y int, xstart int, row []string, lim []int, style tcell.Style) {
 	for i,cell := range(row) {
+		if i<xstart {
+			continue
+		}
 		for k,r := range(cell) {
 			xpos := x+k
 			s.SetContent(xpos, y, r, nil, style)
@@ -66,20 +69,25 @@ func tcell_row(s tcell.Screen, x, y int, row []string, lim []int, style tcell.St
 	}
 }
 
-func tcell_render(table* Table, term* Terminal, yview int) (int) {
+func tcell_render(table* Table, term* Terminal, xview, yview int) (int, int) {
 	term.screen.Clear()
 
+	xlim_hi := table.ncols-1
 	ylim_hi := table.nrows-1
 	yview = int_max(0, yview)
+	xview = int_max(0, xview)
 	if yview>ylim_hi {
 		yview = ylim_hi
 	}
-
+	if xview>xlim_hi {
+		xview = xlim_hi
+	}
+	
 	style_normal := tcell.StyleDefault
 	style_underl := tcell.StyleDefault.Underline(true)
 	y_header := 0
 	y_status := term.yscreen-1
-	tcell_row(term.screen, 0, y_header, table.header, table.limits, style_underl)
+	tcell_row(term.screen, 0, y_header, xview, table.header, table.limits, style_underl)
 
 	empty_row := []string{"~"}
 	content_index := 0
@@ -90,14 +98,14 @@ func tcell_render(table* Table, term* Terminal, yview int) (int) {
 			row = table.content[idx]
 		}
 		
-		tcell_row(term.screen, 0, y, row, table.limits, style_normal)
+		tcell_row(term.screen, 0, y, xview, row, table.limits, style_normal)
 		content_index++
 	}
 
 	if(term.mode == Normal) {
 		tcell_line(term.screen, 0, y_status,
-			fmt.Sprintf("%v: nrows=%d ncols=%d yview=%d xscreen=%d yscreen=%d",
-				table.description, table.nrows, table.ncols, yview, term.xscreen, term.yscreen),
+			fmt.Sprintf("%v: nrows=%d ncols=%d xview=%d yview=%d xscreen=%d yscreen=%d",
+				table.description, table.nrows, table.ncols, xview, yview, term.xscreen, term.yscreen),
 			style_underl)
 		
 	} else if(term.mode == Search) {
@@ -110,15 +118,16 @@ func tcell_render(table* Table, term* Terminal, yview int) (int) {
 	}
 	
 	term.screen.Show()
-	return yview
+	return xview, yview
 }
 
 func (term* Terminal) Run(table* Table) {	
 	yview := 0
+	xview := 0
 	s:= term.screen
 	
 	for {
-		yview = tcell_render(table, term, yview)
+		xview, yview = tcell_render(table, term, xview, yview)
 		switch ev := s.PollEvent().(type) {
 		case *tcell.EventResize:
 			s.Sync()
@@ -138,6 +147,14 @@ func (term* Terminal) Run(table* Table) {
 				if ev.Key() == tcell.KeyUp || ev.Rune()=='k' {
 					yview = yview-1
 				}
+
+				if ev.Key() == tcell.KeyLeft || ev.Rune()=='h' {
+					xview = xview-1
+				}
+
+				if ev.Key() == tcell.KeyRight || ev.Rune()=='l' {
+					xview = xview+1
+				}
 				
 				if ev.Key() == tcell.KeyPgDn || ev.Rune()==' ' {
 					yview = yview+term.yscreen
@@ -149,10 +166,12 @@ func (term* Terminal) Run(table* Table) {
 				
 				if ev.Key() == tcell.KeyHome || ev.Rune()=='0' {
 					yview = 0
+					xview = 0
 				}
 				
 				if ev.Key() == tcell.KeyEnd || ev.Rune()=='G' {
 					yview = table.nrows - term.yscreen
+					xview = 0
 				}
 				
 				if ev.Rune() == '/' {
