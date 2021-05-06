@@ -33,13 +33,15 @@ func main() {
 	table := tabulon.NewTable()
 	table.SetMatch(opts.Match)
 	table.SetSkip(opts.Skip)
+
 	if(len(opts.Delimiter)>0) {
 		table.SetDelimiter(rune(opts.Delimiter[0]))
 	}
+
 	if(len(opts.OutputDelimiter)>0) {
 		table.SetOutputDelimiter(rune(opts.OutputDelimiter[0]))
 	}
-	
+
 	if opts.Stdin {
 		table.ReadStdin()
 	} else {

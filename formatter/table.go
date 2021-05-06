@@ -23,7 +23,7 @@ type Table struct {
 
 func NewTable() (Table) {
 	t := Table {
-		delimiter: ',',
+		delimiter: 0,
 		header: nil,
 		content: nil,
 		nrows: 0,
@@ -123,6 +123,18 @@ func (table* Table) ReadStdin() {
 	table.calcLimits()
 }
 
+func guess_delimiter(fname string) (rune) {
+	if strings.Contains(fname, ".csv") {
+		return ','
+	} else if strings.Contains(fname, ".psv") {
+		return '|'
+	} else if strings.Contains(fname, ".tsv") {
+		return '\t'
+	}
+
+	return ','
+}
+
 func (table* Table) ReadFiles(files []string) {
 	if files==nil || len(files)==0 {
 		log.Fatal("ReadFiles: no files to read")
@@ -137,6 +149,10 @@ func (table* Table) ReadFiles(files []string) {
 			log.Fatal(err)
 		}
 
+		if table.delimiter==0 {
+			table.delimiter = guess_delimiter(file)
+		}
+		
 		table.processFile(fd)
 		fd.Close()
 	}
