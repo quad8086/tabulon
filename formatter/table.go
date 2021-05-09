@@ -119,6 +119,9 @@ func (table* Table) processFile(fd* os.File) {
 func (table* Table) ReadStdin() {
 	table.Clear()
 	table.description = "stdin"
+	if table.delimiter==0 {
+		table.delimiter = ','
+	}
 	table.processFile(os.Stdin)
 	table.calcLimits()
 }
