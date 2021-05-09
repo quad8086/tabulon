@@ -12,7 +12,7 @@ func (table* Table) RenderPlaintext() {
 	}
 }
 
-func (table* Table) RenderTerminal() {
+func (table* Table) RenderInteractive() {
 	term := NewTerminal()
 	term.Run(table)
 }

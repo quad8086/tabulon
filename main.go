@@ -53,7 +53,7 @@ func main() {
 	} else if opts.Plain || opts.Stdin {
 		table.RenderPlaintext()
 	} else {
-		table.RenderTerminal()
+		table.RenderInteractive()
 	}
 	os.Exit(0)
 }
