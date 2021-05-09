@@ -48,10 +48,10 @@ func main() {
 		table.ReadFiles(files)
 	}
 
-	if opts.Plain {
-		table.RenderPlaintext()
-	} else if opts.CSV {
+	if opts.CSV {
 		table.RenderCSV()
+	} else if opts.Plain || opts.Stdin {
+		table.RenderPlaintext()
 	} else {
 		table.RenderTerminal()
 	}
