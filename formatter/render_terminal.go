@@ -106,8 +106,11 @@ func tcell_render(table* Table, term* Terminal, xview, yview int) (int, int) {
 
 	if(term.mode == Normal) {
 		tcell_line(term.screen, 0, y_status,
-			fmt.Sprintf("%v: nrows=%d ncols=%d xview=%d yview=%d xscreen=%d yscreen=%d",
-				table.description, table.nrows, table.ncols, xview, yview, term.xscreen, term.yscreen),
+			fmt.Sprintf("%v: row=%v/%v col=%v/%v screen=%v,%v",
+				table.description,
+				yview, table.nrows,
+				xview, table.ncols,
+				term.yscreen, term.xscreen),
 			term.style_underl)
 		
 	} else if(term.mode == Search) {
@@ -166,7 +169,7 @@ func (term* Terminal) Run(table* Table) {
 					yview = yview-term.yscreen
 				}
 				
-				if ev.Key() == tcell.KeyHome || ev.Rune()=='0' {
+				if ev.Key() == tcell.KeyHome || ev.Rune()=='0' || ev.Rune()=='g' {
 					yview = 0
 					xview = 0
 				}
