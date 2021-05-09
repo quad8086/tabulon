@@ -68,7 +68,7 @@ func tcell_row(s tcell.Screen, x, y int, xstart int, row []string, lim []int, st
 	}
 }
 
-func tcell_render(term* Terminal, table* Table) {
+func tcell_render(term *Terminal, table *Table) {
 	term.screen.Clear()
 
 	xlim_hi := table.ncols-1
@@ -120,7 +120,7 @@ func tcell_render(term* Terminal, table* Table) {
 	term.screen.Show()
 }
 
-func run_normal(ev* tcell.EventKey, term* Terminal, table* Table) {
+func run_normal(ev *tcell.EventKey, term *Terminal, table *Table) {
 	s := term.screen
 
 	if ev.Key() == tcell.KeyEscape || ev.Rune()=='q' || ev.Rune()=='Q' {
@@ -179,7 +179,7 @@ func run_normal(ev* tcell.EventKey, term* Terminal, table* Table) {
 	}
 }
 
-func run_search(ev* tcell.EventKey, term* Terminal, table* Table) {
+func run_search(ev *tcell.EventKey, term *Terminal, table *Table) {
 	if term.mode==Search && ev.Key() == tcell.KeyEnter {
 		term.yview = table.Search(term.yview, term.search)
 		term.mode = Normal
@@ -212,7 +212,7 @@ func run_search(ev* tcell.EventKey, term* Terminal, table* Table) {
 	}
 }
 
-func (term* Terminal) Run(table* Table) {
+func (term *Terminal) Run(table *Table) {
 	s:= term.screen
 
 	for {

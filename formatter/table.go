@@ -34,23 +34,23 @@ func NewTable() (Table) {
 	return t
 }
 
-func (table* Table) SetMatch(m []string) {
+func (table *Table) SetMatch(m []string) {
 	table.match = m
 }
 
-func (table* Table) SetSkip(skip int) {
+func (table *Table) SetSkip(skip int) {
 	table.skip = skip
 }
 
-func (table* Table) SetDelimiter(d rune) {
+func (table *Table) SetDelimiter(d rune) {
 	table.delimiter = d
 }
 
-func (table* Table) SetOutputDelimiter(d rune) {
+func (table *Table) SetOutputDelimiter(d rune) {
 	table.output_delimiter = d
 }
 
-func (table* Table) Clear() {
+func (table *Table) Clear() {
 	table.header = nil
 	table.content = nil
 	table.nrows = 0
@@ -58,7 +58,7 @@ func (table* Table) Clear() {
 	table.skip = 0
 }
 
-func (table* Table) calcLimits() {
+func (table *Table) calcLimits() {
 	ncols := len(table.header)
 	table.limits = make([]int, ncols)
 	for j,cell := range(table.header) {
@@ -72,7 +72,7 @@ func (table* Table) calcLimits() {
 	}
 }
 
-func filter_record(rec []string, t* Table) (bool) {
+func filter_record(rec []string, t *Table) (bool) {
 	if len(t.match) == 0 {
 		return false
 	}
@@ -87,13 +87,13 @@ func filter_record(rec []string, t* Table) (bool) {
 	return false
 }
 
-func (table* Table) processFile(fd* os.File) {
+func (table *Table) processFile(fd *os.File) {
 	skip := table.skip
 	scanner := bufio.NewScanner(fd)
 	scanner.Split(bufio.ScanLines)
 	reader := NewCSVReader()
 	reader.SetDelimiter(table.delimiter)
-	
+
 	for scanner.Scan() {
 		if skip>0 {
 			skip--
@@ -116,7 +116,7 @@ func (table* Table) processFile(fd* os.File) {
 	table.nrows = len(table.content)
 }
 
-func (table* Table) ReadStdin() {
+func (table *Table) ReadStdin() {
 	table.Clear()
 	table.description = "stdin"
 	if table.delimiter==0 {
@@ -138,7 +138,7 @@ func guess_delimiter(fname string) (rune) {
 	return ','
 }
 
-func (table* Table) ReadFiles(files []string) {
+func (table *Table) ReadFiles(files []string) {
 	if files==nil || len(files)==0 {
 		log.Fatal("ReadFiles: no files to read")
 	}
@@ -155,14 +155,14 @@ func (table* Table) ReadFiles(files []string) {
 		if table.delimiter==0 {
 			table.delimiter = guess_delimiter(file)
 		}
-		
+
 		table.processFile(fd)
 		fd.Close()
 	}
 	table.calcLimits()
 }
 
-func (table* Table) Search(yorig int, s string) (int) {
+func (table *Table) Search(yorig int, s string) (int) {
 	for y:=yorig+1; y<len(table.content); y++ {
 		row := table.content[y]
 		for _,cell := range(row) {
@@ -175,7 +175,7 @@ func (table* Table) Search(yorig int, s string) (int) {
 	return yorig
 }
 
-func (table* Table) SearchReverse(yorig int, s string) (int) {
+func (table *Table) SearchReverse(yorig int, s string) (int) {
 	for y:=yorig-1; y>=0; y-- {
 		row := table.content[y]
 		for _,cell := range(row) {

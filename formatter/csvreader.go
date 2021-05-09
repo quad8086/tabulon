@@ -60,19 +60,19 @@ func normalize(row []string, ncols int) ([]string) {
 	return row
 }
 
-func (c* CSVReader) SetDelimiter(d rune) {
+func (c *CSVReader) SetDelimiter(d rune) {
 	c.delimiter = d
 }
 
-func (c* CSVReader) GetHeader() ([]string) {
+func (c *CSVReader) GetHeader() ([]string) {
 	return c.header
 }
 
-func (c* CSVReader) Reset() {
+func (c *CSVReader) Reset() {
 	c.header = nil
 }
 
-func (reader* CSVReader) ParseLine(line string) (row []string) {
+func (reader *CSVReader) ParseLine(line string) (row []string) {
 	if len(reader.header) == 0 {
 		reader.header = tokenize(line, reader.delimiter)
 		reader.ncols = len(reader.header)
