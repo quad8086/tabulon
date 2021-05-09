@@ -120,7 +120,96 @@ func tcell_render(term* Terminal, table* Table) {
 	term.screen.Show()
 }
 
-func run_normal(term* Terminal, table* Table) {
+func run_normal(ev* tcell.EventKey, term* Terminal, table* Table) {
+	s := term.screen
+
+	if ev.Key() == tcell.KeyEscape || ev.Rune()=='q' || ev.Rune()=='Q' {
+		s.Fini()
+		os.Exit(0)
+	}
+
+	if ev.Key() == tcell.KeyDown || ev.Rune()=='j' {
+		term.yview = term.yview+1
+	}
+
+	if ev.Key() == tcell.KeyUp || ev.Rune()=='k' {
+		term.yview = term.yview-1
+	}
+
+	if ev.Key() == tcell.KeyLeft || ev.Rune()=='h' {
+		term.xview = term.xview-1
+	}
+
+	if ev.Key() == tcell.KeyRight || ev.Rune()=='l' {
+		term.xview = term.xview+1
+	}
+
+	if ev.Key() == tcell.KeyPgDn || ev.Rune()==' ' {
+		term.yview = term.yview+term.yscreen
+	}
+
+	if ev.Key() == tcell.KeyPgUp || ev.Rune()=='b' {
+		term.yview = term.yview-term.yscreen
+	}
+
+	if ev.Key() == tcell.KeyHome || ev.Rune()=='0' || ev.Rune()=='g' {
+		term.yview = 0
+		term.xview = 0
+	}
+
+	if ev.Key() == tcell.KeyEnd || ev.Rune()=='G' {
+		term.yview = table.nrows - term.yscreen
+		term.xview = 0
+	}
+
+	if ev.Rune() == '/' {
+		term.mode = Search
+	}
+
+	if ev.Rune() == '?' {
+		term.mode = SearchReverse
+	}
+
+	if ev.Rune() == 'n' && len(term.search)>0 {
+		term.yview = table.Search(term.yview, term.search)
+	}
+
+	if ev.Rune() == 'N' && len(term.search)>0 {
+		term.yview = table.SearchReverse(term.yview, term.search)
+	}
+}
+
+func run_search(ev* tcell.EventKey, term* Terminal, table* Table) {
+	if term.mode==Search && ev.Key() == tcell.KeyEnter {
+		term.yview = table.Search(term.yview, term.search)
+		term.mode = Normal
+	}
+
+	if term.mode==SearchReverse && ev.Key() == tcell.KeyEnter {
+		term.yview = table.SearchReverse(term.yview, term.search)
+		term.mode = Normal
+	}
+
+	if ev.Key() == tcell.KeyCtrlG {
+		term.search = ""
+		term.mode = Normal
+	}
+
+	if ev.Key() == tcell.KeyCtrlU {
+		term.search = ""
+	}
+
+	is_backspace := ev.Key() == tcell.KeyBackspace ||
+		ev.Key() == tcell.KeyDelete ||
+		ev.Key() == tcell.KeyCtrlH ||
+		ev.Key() == tcell.KeyBackspace2
+	if is_backspace && len(term.search)>0 {
+		term.search = term.search[:len(term.search)-1]
+	}
+
+	if strconv.IsPrint(ev.Rune()) {
+		term.search += string(ev.Rune())
+	}
 }
 
 func (term* Terminal) Run(table* Table) {
@@ -131,96 +220,13 @@ func (term* Terminal) Run(table* Table) {
 		switch ev := s.PollEvent().(type) {
 		case *tcell.EventResize:
 			s.Sync()
-			_, term.yscreen = s.Size()
+			term.xscreen, term.yscreen = s.Size()
 
 		case *tcell.EventKey:
 			if(term.mode == Normal) {
-				if ev.Key() == tcell.KeyEscape || ev.Rune()=='q' || ev.Rune()=='Q' {
-					s.Fini()
-					os.Exit(0)
-				}
-
-				if ev.Key() == tcell.KeyDown || ev.Rune()=='j' {
-					term.yview = term.yview+1
-				}
-
-				if ev.Key() == tcell.KeyUp || ev.Rune()=='k' {
-					term.yview = term.yview-1
-				}
-
-				if ev.Key() == tcell.KeyLeft || ev.Rune()=='h' {
-					term.xview = term.xview-1
-				}
-
-				if ev.Key() == tcell.KeyRight || ev.Rune()=='l' {
-					term.xview = term.xview+1
-				}
-
-				if ev.Key() == tcell.KeyPgDn || ev.Rune()==' ' {
-					term.yview = term.yview+term.yscreen
-				}
-
-				if ev.Key() == tcell.KeyPgUp || ev.Rune()=='b' {
-					term.yview = term.yview-term.yscreen
-				}
-
-				if ev.Key() == tcell.KeyHome || ev.Rune()=='0' || ev.Rune()=='g' {
-					term.yview = 0
-					term.xview = 0
-				}
-
-				if ev.Key() == tcell.KeyEnd || ev.Rune()=='G' {
-					term.yview = table.nrows - term.yscreen
-					term.xview = 0
-				}
-
-				if ev.Rune() == '/' {
-					term.mode = Search
-				}
-
-				if ev.Rune() == '?' {
-					term.mode = SearchReverse
-				}
-
-				if ev.Rune() == 'n' && len(term.search)>0 {
-					term.yview = table.Search(term.yview, term.search)
-				}
-
-				if ev.Rune() == 'N' && len(term.search)>0 {
-					term.yview = table.SearchReverse(term.yview, term.search)
-				}
-
+				run_normal(ev, term, table)
 			} else if(term.mode == Search || term.mode==SearchReverse) {
-				if term.mode==Search && ev.Key() == tcell.KeyEnter {
-					term.yview = table.Search(term.yview, term.search)
-					term.mode = Normal
-				}
-
-				if term.mode==SearchReverse && ev.Key() == tcell.KeyEnter {
-					term.yview = table.SearchReverse(term.yview, term.search)
-					term.mode = Normal
-				}
-
-				if ev.Key() == tcell.KeyCtrlG {
-					term.search = ""
-					term.mode = Normal
-				}
-
-				if ev.Key() == tcell.KeyCtrlU {
-					term.search = ""
-				}
-
-				is_backspace := ev.Key() == tcell.KeyBackspace ||
-					ev.Key() == tcell.KeyDelete ||
-					ev.Key() == tcell.KeyCtrlH ||
-					ev.Key() == tcell.KeyBackspace2
-				if is_backspace && len(term.search)>0 {
-					term.search = term.search[:len(term.search)-1]
-				}
-
-				if strconv.IsPrint(ev.Rune()) {
-					term.search += string(ev.Rune())
-				}
+				run_search(ev, term, table)
 			}
 		}
 	}
