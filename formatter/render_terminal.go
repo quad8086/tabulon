@@ -16,8 +16,6 @@ const (
 )
 
 type Terminal struct {
-	yheader int
-	ystatus int
 	xscreen int
 	yscreen int
 	screen tcell.Screen
@@ -28,9 +26,8 @@ type Terminal struct {
 }
 
 func NewTerminal() (Terminal) {
-	t := Terminal{
-		yheader: 0,
-		ystatus: 0,
+	t := Terminal {
+		mode: Normal,
 	}
 
 	s, e := tcell.NewScreen()
