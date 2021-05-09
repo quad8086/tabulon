@@ -213,14 +213,12 @@ func run_search(ev *tcell.EventKey, term *Terminal, table *Table) {
 }
 
 func (term *Terminal) Run(table *Table) {
-	s:= term.screen
-
 	for {
 		tcell_render(term, table)
-		switch ev := s.PollEvent().(type) {
+		switch ev := term.screen.PollEvent().(type) {
 		case *tcell.EventResize:
-			s.Sync()
-			term.xscreen, term.yscreen = s.Size()
+			term.screen.Sync()
+			term.xscreen, term.yscreen = term.screen.Size()
 
 		case *tcell.EventKey:
 			if(term.mode == Normal) {
