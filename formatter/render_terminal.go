@@ -23,6 +23,8 @@ type Terminal struct {
 	screen tcell.Screen
 	mode UIMode
 	search string
+	style_normal tcell.Style
+	style_underl tcell.Style
 }
 
 func NewTerminal() (Terminal) {
@@ -47,6 +49,8 @@ func NewTerminal() (Terminal) {
 
 	t.xscreen, t.yscreen = s.Size()
 	t.screen = s
+	t.style_normal = tcell.StyleDefault
+	t.style_underl = tcell.StyleDefault.Underline(true)
 	return t
 }
 
@@ -83,11 +87,9 @@ func tcell_render(table* Table, term* Terminal, xview, yview int) (int, int) {
 		xview = xlim_hi
 	}
 	
-	style_normal := tcell.StyleDefault
-	style_underl := tcell.StyleDefault.Underline(true)
 	y_header := 0
 	y_status := term.yscreen-1
-	tcell_row(term.screen, 0, y_header, xview, table.header, table.limits, style_underl)
+	tcell_row(term.screen, 0, y_header, xview, table.header, table.limits, term.style_underl)
 
 	empty_row := []string{"~"}
 	content_index := 0
@@ -98,7 +100,7 @@ func tcell_render(table* Table, term* Terminal, xview, yview int) (int, int) {
 			row = table.content[idx]
 		}
 		
-		tcell_row(term.screen, 0, y, xview, row, table.limits, style_normal)
+		tcell_row(term.screen, 0, y, xview, row, table.limits, term.style_normal)
 		content_index++
 	}
 
@@ -106,15 +108,15 @@ func tcell_render(table* Table, term* Terminal, xview, yview int) (int, int) {
 		tcell_line(term.screen, 0, y_status,
 			fmt.Sprintf("%v: nrows=%d ncols=%d xview=%d yview=%d xscreen=%d yscreen=%d",
 				table.description, table.nrows, table.ncols, xview, yview, term.xscreen, term.yscreen),
-			style_underl)
+			term.style_underl)
 		
 	} else if(term.mode == Search) {
 		tcell_line(term.screen, 0, y_status, fmt.Sprintf("Search: %v", term.search),
-			style_underl)
+			term.style_underl)
 		
 	} else if(term.mode == SearchReverse) {
 		tcell_line(term.screen, 0, y_status, fmt.Sprintf("Search reverse: %v", term.search),
-			style_underl)
+			term.style_underl)
 	}
 	
 	term.screen.Show()
