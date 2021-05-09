@@ -23,11 +23,15 @@ type Terminal struct {
 	search string
 	style_normal tcell.Style
 	style_underl tcell.Style
+	xview int
+	yview int
 }
 
 func NewTerminal() (Terminal) {
 	t := Terminal {
 		mode: Normal,
+		xview: 0,
+		yview: 0,
 	}
 
 	s, e := tcell.NewScreen()
@@ -64,34 +68,34 @@ func tcell_row(s tcell.Screen, x, y int, xstart int, row []string, lim []int, st
 	}
 }
 
-func tcell_render(table* Table, term* Terminal, xview, yview int) (int, int) {
+func tcell_render(term* Terminal, table* Table) {
 	term.screen.Clear()
 
 	xlim_hi := table.ncols-1
 	ylim_hi := table.nrows-1
-	yview = int_max(0, yview)
-	xview = int_max(0, xview)
-	if yview>ylim_hi {
-		yview = ylim_hi
+	term.yview = int_max(0, term.yview)
+	term.xview = int_max(0, term.xview)
+	if term.yview>ylim_hi {
+		term.yview = ylim_hi
 	}
-	if xview>xlim_hi {
-		xview = xlim_hi
+	if term.xview>xlim_hi {
+		term.xview = xlim_hi
 	}
 
 	y_header := 0
 	y_status := term.yscreen-1
-	tcell_row(term.screen, 0, y_header, xview, table.header, table.limits, term.style_underl)
+	tcell_row(term.screen, 0, y_header, term.xview, table.header, table.limits, term.style_underl)
 
 	empty_row := []string{"~"}
 	content_index := 0
 	for y:=1; y<y_status; y++ {
-		idx := yview + content_index
+		idx := term.yview + content_index
 		row := empty_row
 		if idx>=0 && idx<=ylim_hi {
 			row = table.content[idx]
 		}
 
-		tcell_row(term.screen, 0, y, xview, row, table.limits, term.style_normal)
+		tcell_row(term.screen, 0, y, term.xview, row, table.limits, term.style_normal)
 		content_index++
 	}
 
@@ -99,8 +103,8 @@ func tcell_render(table* Table, term* Terminal, xview, yview int) (int, int) {
 		tcell_line(term.screen, 0, y_status,
 			fmt.Sprintf("%v: row=%v/%v col=%v/%v screen=%v,%v",
 				table.description,
-				yview, table.nrows,
-				xview, table.ncols,
+				term.yview, table.nrows,
+				term.xview, table.ncols,
 				term.yscreen, term.xscreen),
 			term.style_underl)
 
@@ -114,16 +118,16 @@ func tcell_render(table* Table, term* Terminal, xview, yview int) (int, int) {
 	}
 
 	term.screen.Show()
-	return xview, yview
+}
+
+func run_normal(term* Terminal, table* Table) {
 }
 
 func (term* Terminal) Run(table* Table) {
-	yview := 0
-	xview := 0
 	s:= term.screen
 
 	for {
-		xview, yview = tcell_render(table, term, xview, yview)
+		tcell_render(term, table)
 		switch ev := s.PollEvent().(type) {
 		case *tcell.EventResize:
 			s.Sync()
@@ -137,37 +141,37 @@ func (term* Terminal) Run(table* Table) {
 				}
 
 				if ev.Key() == tcell.KeyDown || ev.Rune()=='j' {
-					yview = yview+1
+					term.yview = term.yview+1
 				}
 
 				if ev.Key() == tcell.KeyUp || ev.Rune()=='k' {
-					yview = yview-1
+					term.yview = term.yview-1
 				}
 
 				if ev.Key() == tcell.KeyLeft || ev.Rune()=='h' {
-					xview = xview-1
+					term.xview = term.xview-1
 				}
 
 				if ev.Key() == tcell.KeyRight || ev.Rune()=='l' {
-					xview = xview+1
+					term.xview = term.xview+1
 				}
 
 				if ev.Key() == tcell.KeyPgDn || ev.Rune()==' ' {
-					yview = yview+term.yscreen
+					term.yview = term.yview+term.yscreen
 				}
 
 				if ev.Key() == tcell.KeyPgUp || ev.Rune()=='b' {
-					yview = yview-term.yscreen
+					term.yview = term.yview-term.yscreen
 				}
 
 				if ev.Key() == tcell.KeyHome || ev.Rune()=='0' || ev.Rune()=='g' {
-					yview = 0
-					xview = 0
+					term.yview = 0
+					term.xview = 0
 				}
 
 				if ev.Key() == tcell.KeyEnd || ev.Rune()=='G' {
-					yview = table.nrows - term.yscreen
-					xview = 0
+					term.yview = table.nrows - term.yscreen
+					term.xview = 0
 				}
 
 				if ev.Rune() == '/' {
@@ -179,21 +183,21 @@ func (term* Terminal) Run(table* Table) {
 				}
 
 				if ev.Rune() == 'n' && len(term.search)>0 {
-					yview = table.Search(yview, term.search)
+					term.yview = table.Search(term.yview, term.search)
 				}
 
 				if ev.Rune() == 'N' && len(term.search)>0 {
-					yview = table.SearchReverse(yview, term.search)
+					term.yview = table.SearchReverse(term.yview, term.search)
 				}
 
 			} else if(term.mode == Search || term.mode==SearchReverse) {
 				if term.mode==Search && ev.Key() == tcell.KeyEnter {
-					yview = table.Search(yview, term.search)
+					term.yview = table.Search(term.yview, term.search)
 					term.mode = Normal
 				}
 
 				if term.mode==SearchReverse && ev.Key() == tcell.KeyEnter {
-					yview = table.SearchReverse(yview, term.search)
+					term.yview = table.SearchReverse(term.yview, term.search)
 					term.mode = Normal
 				}
 
