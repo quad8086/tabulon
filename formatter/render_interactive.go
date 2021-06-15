@@ -13,6 +13,7 @@ const (
 	Normal UIMode = iota
 	Search
 	SearchReverse
+	Help
 )
 
 type Terminal struct {
@@ -25,6 +26,7 @@ type Terminal struct {
 	style_underl tcell.Style
 	xview int
 	yview int
+	help []string
 }
 
 func NewTerminal() (Terminal) {
@@ -46,6 +48,8 @@ func NewTerminal() (Terminal) {
 	t.screen = s
 	t.style_normal = tcell.StyleDefault
 	t.style_underl = t.style_normal.Underline(true)
+
+	t.help = []string{"help1", "help2"}
 	return t
 }
 
@@ -84,7 +88,12 @@ func tcell_render(term *Terminal, table *Table) {
 
 	y_header := 0
 	y_status := term.yscreen-1
-	tcell_row(term.screen, 0, y_header, term.xview, table.header, table.limits, term.style_underl)
+
+	if(term.mode == Help) {
+		tcell_row(term.screen, 0, y_header, term.xview, []string{"Help"}, []int{5}, term.style_underl)
+	} else {
+		tcell_row(term.screen, 0, y_header, term.xview, table.header, table.limits, term.style_underl)
+	}
 
 	empty_row := []string{"~"}
 	content_index := 0
@@ -115,6 +124,8 @@ func tcell_render(term *Terminal, table *Table) {
 	} else if(term.mode == SearchReverse) {
 		tcell_line(term.screen, 0, y_status, fmt.Sprintf("Search reverse: %v", term.search),
 			term.style_underl)
+	} else if(term.mode == Help) {
+		tcell_line(term.screen, 0, y_status, "Help", term.style_underl)
 	}
 
 	term.screen.Show()
@@ -152,14 +163,17 @@ func run_normal(ev *tcell.EventKey, term *Terminal, table *Table) {
 		term.yview = term.yview-term.yscreen
 	}
 
-	if ev.Key() == tcell.KeyHome || ev.Rune()=='0' || ev.Rune()=='g' {
+	if ev.Rune()=='0' {
 		term.yview = 0
 		term.xview = 0
 	}
 
+	if ev.Key() == tcell.KeyHome || ev.Rune()=='g' {
+		term.yview = 0
+	}
+
 	if ev.Key() == tcell.KeyEnd || ev.Rune()=='G' {
 		term.yview = table.nrows - term.yscreen
-		term.xview = 0
 	}
 
 	if ev.Rune() == '/' {
@@ -168,6 +182,10 @@ func run_normal(ev *tcell.EventKey, term *Terminal, table *Table) {
 
 	if ev.Rune() == '?' {
 		term.mode = SearchReverse
+	}
+
+	if ev.Rune() == 'h' {
+		term.mode = Help
 	}
 
 	if ev.Rune() == 'n' && len(term.search)>0 {
@@ -212,6 +230,12 @@ func run_search(ev *tcell.EventKey, term *Terminal, table *Table) {
 	}
 }
 
+func run_help(ev *tcell.EventKey, term *Terminal, table *Table) {
+	if ev.Key() == tcell.KeyEscape || ev.Rune()=='q' || ev.Rune()=='Q' {
+		term.mode = Normal
+	}
+}
+
 func (term *Terminal) Run(table *Table) {
 	for {
 		tcell_render(term, table)
@@ -225,6 +249,8 @@ func (term *Terminal) Run(table *Table) {
 				run_normal(ev, term, table)
 			} else if(term.mode == Search || term.mode==SearchReverse) {
 				run_search(ev, term, table)
+			} else if(term.mode == Help) {
+				run_help(ev, term, table)
 			}
 		}
 	}
