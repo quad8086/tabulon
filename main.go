@@ -19,6 +19,7 @@ func main() {
 		OutputDelimiter string `short:"D" long:"output-delimiter" description:"set output delimiter" default:""`
 		Head int `short:"h" long:"head" description:"only handle N first lines of input" default:"-1"`
 		Tail int `short:"t" long:"tail" description:"only handle N last lines of input" default:"-1"`
+		List string `short:"l" long:"list-column" description:"output specified column as list" default:""`
 	}
 
 	args, err := flags.ParseArgs(&opts, os.Args)
@@ -56,7 +57,9 @@ func main() {
 		table.ReadFiles(files)
 	}
 
-	if opts.CSV {
+	if len(opts.List)>0 {
+		table.RenderList(opts.List)
+	} else if opts.CSV {
 		table.RenderCSV()
 	} else if opts.Plain || opts.Stdin {
 		table.RenderPlaintext()

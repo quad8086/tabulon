@@ -224,3 +224,13 @@ func (table *Table) SearchReverse(yorig int, s string) (int) {
 
 	return yorig
 }
+
+func (table *Table) FindColumn(col string) (int) {
+	for i, s := range(table.header) {
+		if s==col {
+			return i
+		}
+	}
+
+	return -1
+}
