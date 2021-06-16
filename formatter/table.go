@@ -19,6 +19,8 @@ type Table struct {
 	limits []int
 	description string
 	skip int
+	head int
+	tail int
 }
 
 func NewTable() (Table) {
@@ -29,9 +31,22 @@ func NewTable() (Table) {
 		nrows: 0,
 		ncols: 0,
 		output_delimiter: ',',
+		skip: 0,
+		head: -1,
+		tail: -1,
 	}
 
 	return t
+}
+
+func (table *Table) Clear() {
+	table.header = nil
+	table.content = nil
+	table.nrows = 0
+	table.ncols = 0
+	table.skip = 0
+	table.head = -1
+	table.tail = -1
 }
 
 func (table *Table) SetMatch(m []string) {
@@ -42,20 +57,26 @@ func (table *Table) SetSkip(skip int) {
 	table.skip = skip
 }
 
+func (table *Table) SetHead(head int) {
+	if head< -1 {
+		log.Fatal("head has to be positive")
+	}
+	table.head = head
+}
+
+func (table *Table) SetTail(tail int) {
+	if tail< -1 {
+		log.Fatal("tail has to be positive")
+	}
+	table.tail = tail
+}
+
 func (table *Table) SetDelimiter(d rune) {
 	table.delimiter = d
 }
 
 func (table *Table) SetOutputDelimiter(d rune) {
 	table.output_delimiter = d
-}
-
-func (table *Table) Clear() {
-	table.header = nil
-	table.content = nil
-	table.nrows = 0
-	table.ncols = 0
-	table.skip = 0
 }
 
 func (table *Table) calcLimits() {
@@ -93,6 +114,8 @@ func (table *Table) processFile(fd *os.File) {
 	scanner.Split(bufio.ScanLines)
 	reader := NewCSVReader()
 	reader.SetDelimiter(table.delimiter)
+	head := table.head
+	tail := table.tail
 
 	for scanner.Scan() {
 		if skip>0 {
@@ -111,8 +134,22 @@ func (table *Table) processFile(fd *os.File) {
 			continue
 		}
 
+		if head!=-1 {
+			if head==0 {
+				break
+			}
+
+			head--
+		}
+
 		table.content = append(table.content, row)
 	}
+
+	n := len(table.content)
+	if tail!=-1 && n>tail {
+		table.content = table.content[(n-tail):n]
+	}
+
 	table.nrows = len(table.content)
 }
 
