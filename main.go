@@ -5,7 +5,6 @@ import (
 	"log"
 	"github.com/jessevdk/go-flags"
 	"tabulon/formatter"
-	"fmt"
 )
 
 func main() {
@@ -24,7 +23,6 @@ func main() {
 
 	args, err := flags.ParseArgs(&opts, os.Args)
 	if err != nil {
-		fmt.Println(err)
 		os.Exit(1)
 	}
 
