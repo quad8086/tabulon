@@ -19,6 +19,7 @@ func main() {
 		Head int `short:"h" long:"head" description:"only handle N first lines of input" default:"-1"`
 		Tail int `short:"t" long:"tail" description:"only handle N last lines of input" default:"-1"`
 		List string `short:"l" long:"list-column" description:"output specified column as list" default:""`
+		TSV bool `long:"tsv" description:"force input delimiter to tab"`
 	}
 
 	args, err := flags.ParseArgs(&opts, os.Args)
@@ -43,6 +44,8 @@ func main() {
 
 	if(len(opts.Delimiter)>0) {
 		table.SetDelimiter(rune(opts.Delimiter[0]))
+	} else if(opts.TSV) {
+		table.SetDelimiter('\t')
 	}
 
 	if(len(opts.OutputDelimiter)>0) {
