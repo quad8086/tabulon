@@ -188,6 +188,14 @@ func run_normal(ev *tcell.EventKey, term *Terminal, table *Table) {
 		term.mode = Help
 	}
 
+	if ev.Rune() == 's' {
+		table.SortByIndex(term.xview)
+	}
+
+	if ev.Rune() == 'S' {
+		table.SortByIndexReverse(term.xview)
+	}
+
 	if ev.Rune() == 'n' && len(term.search)>0 {
 		term.yview = table.Search(term.yview, term.search)
 	}

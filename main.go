@@ -5,6 +5,7 @@ import (
 	"log"
 	"github.com/jessevdk/go-flags"
 	"tabulon/formatter"
+	"fmt"
 )
 
 func main() {
@@ -20,11 +21,13 @@ func main() {
 		Tail int `short:"t" long:"tail" description:"only handle N last lines of input" default:"-1"`
 		List string `short:"l" long:"list-column" description:"output specified column as list" default:""`
 		TSV bool `long:"tsv" description:"force input delimiter to tab"`
+		SortColumn string `long:"sort-column" description:"sort by column" default:""`
+		Reverse bool `long:"reverse" description:"reverse sort direction"`
 	}
 
 	args, err := flags.ParseArgs(&opts, os.Args)
 	if err != nil {
-		os.Exit(1)
+		panic(err)
 	}
 
 	files:=args[1:]
@@ -56,6 +59,20 @@ func main() {
 		table.ReadStdin()
 	} else {
 		table.ReadFiles(files)
+	}
+
+	if(len(opts.SortColumn)>0) {
+		idx := table.FindColumn(opts.SortColumn)
+		if idx==-1 {
+			fmt.Println("No such column="+opts.SortColumn)
+			os.Exit(1)
+		}
+
+		if opts.Reverse {
+			table.SortByIndexReverse(idx)
+		} else {
+			table.SortByIndex(idx)
+		}
 	}
 
 	if len(opts.List)>0 {

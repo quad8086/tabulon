@@ -6,6 +6,7 @@ import (
 	"strings"
 	"bufio"
 	"path"
+	"sort"
 )
 
 type Table struct {
@@ -233,4 +234,16 @@ func (table *Table) FindColumn(col string) (int) {
 	}
 
 	return -1
+}
+
+func (table *Table) SortByIndex(idx int) {
+	sort.Slice(table.content, func(i, j int) bool {
+		return table.content[i][idx] < table.content[j][idx]
+	})
+}
+
+func (table *Table) SortByIndexReverse(idx int) {
+	sort.Slice(table.content, func(i, j int) bool {
+		return table.content[j][idx] < table.content[i][idx]
+	})
 }
