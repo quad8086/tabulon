@@ -177,10 +177,12 @@ func run_normal(ev *tcell.EventKey, term *Terminal, table *Table) {
 	}
 
 	if ev.Rune() == '/' {
+		term.search = ""
 		term.mode = Search
 	}
 
 	if ev.Rune() == '?' {
+		term.search = ""
 		term.mode = SearchReverse
 	}
 
@@ -206,12 +208,12 @@ func run_normal(ev *tcell.EventKey, term *Terminal, table *Table) {
 }
 
 func run_search(ev *tcell.EventKey, term *Terminal, table *Table) {
-	if term.mode==Search && ev.Key() == tcell.KeyEnter {
+	if term.mode==Search && ev.Key() == tcell.KeyEnter && len(term.search)>0 {
 		term.yview = table.Search(term.yview, term.search)
 		term.mode = Normal
 	}
 
-	if term.mode==SearchReverse && ev.Key() == tcell.KeyEnter {
+	if term.mode==SearchReverse && ev.Key() == tcell.KeyEnter && len(term.search)>0 {
 		term.yview = table.SearchReverse(term.yview, term.search)
 		term.mode = Normal
 	}
