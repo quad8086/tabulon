@@ -7,6 +7,7 @@ import (
 	"bufio"
 	"path"
 	"sort"
+	"strconv"
 )
 
 type Table struct {
@@ -236,14 +237,34 @@ func (table *Table) FindColumn(col string) (int) {
 	return -1
 }
 
-func (table *Table) SortByIndex(idx int) {
+func (table *Table) performSort(idx int, rev bool) {
 	sort.Slice(table.content, func(i, j int) bool {
-		return table.content[i][idx] < table.content[j][idx]
+		s1 := table.content[i][idx]
+		s2 := table.content[j][idx]
+		f1, err1 := strconv.ParseFloat(s1, 8)
+		if err1 == nil {
+			f2, err2 := strconv.ParseFloat(s2, 8)
+			if err2 == nil {
+				if rev {
+					return f1 > f2
+				} else {
+					return f1 < f2
+				}
+			}
+		}
+
+		if rev {
+			return s1 > s2
+		} else {
+			return s1 < s2
+		}
 	})
 }
 
+func (table *Table) SortByIndex(idx int) {
+	table.performSort(idx, false)
+}
+
 func (table *Table) SortByIndexReverse(idx int) {
-	sort.Slice(table.content, func(i, j int) bool {
-		return table.content[j][idx] < table.content[i][idx]
-	})
+	table.performSort(idx, true)
 }
