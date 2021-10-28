@@ -23,6 +23,7 @@ func main() {
 		TSV bool `long:"tsv" description:"force input delimiter to tab"`
 		SortColumn string `long:"sort-column" description:"sort by column" default:""`
 		Reverse bool `long:"reverse" description:"reverse sort direction"`
+		Columns []string `short:"c" long:"columns" description:"only render specified columns"`
 	}
 
 	args, err := flags.ParseArgs(&opts, os.Args)
@@ -44,7 +45,8 @@ func main() {
 	table.SetSkip(opts.Skip)
 	table.SetHead(opts.Head)
 	table.SetTail(opts.Tail)
-
+	table.SetColumns(opts.Columns)
+	
 	if(len(opts.Delimiter)>0) {
 		table.SetDelimiter(rune(opts.Delimiter[0]))
 	} else if(opts.TSV) {

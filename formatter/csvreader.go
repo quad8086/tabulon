@@ -2,66 +2,30 @@ package tabulon
 
 import (
 	"strings"
+	"log"
 //	"fmt"
 )
 
 type CSVReader struct {
 	header []string
-	row []string
 	ncols int
 	delimiter rune
+	quote rune
+	columns []string
+	column_map []int
 }
 
 func NewCSVReader() (CSVReader) {
-	r := CSVReader{nil, nil, 0, ','}
+	r := CSVReader{nil, 0, ',', '"', nil, nil}
 	return r
-}
-
-func tokenize(line string, delimiter rune) ([]string) {
-	if !strings.Contains(line, `"`) {
-		return strings.Split(line, string(delimiter))
-	}
-
-	var in_quote bool = false
-	var res []string
-	var token string
-	for _,c := range(line) {
-		if c=='\'' || c=='"' {
-			in_quote = !in_quote
-			continue
-		}
-
-		if !in_quote && c==delimiter {
-			res = append(res, token)
-			token = ""
-			continue
-		}
-
-		token += string(c)
-	}
-	if len(token)>0 {
-		res = append(res, token)
-	}
-
-	return res
-}
-
-func normalize(row []string, ncols int) ([]string) {
-	n := len(row)
-	//fmt.Printf("%d %d\n", n, ncols)
-	if n<ncols {
-		for i:=n; i<ncols; i++ {
-			row = append(row, "")
-		}
-	} else if n>ncols {
-		row = row[0:ncols]
-	}
-
-	return row
 }
 
 func (c *CSVReader) SetDelimiter(d rune) {
 	c.delimiter = d
+}
+
+func (c *CSVReader) SetColumns(cols []string) {
+	c.columns = cols
 }
 
 func (c *CSVReader) GetHeader() ([]string) {
@@ -72,14 +36,114 @@ func (c *CSVReader) Reset() {
 	c.header = nil
 }
 
+func tokenize(line string, delimiter rune, quote rune) ([]string) {
+	var row []string
+	var token string
+	i := 0
+	N := len(line)
+	
+	for {
+		// check and handle end of line
+		if i>= N {
+			break
+		}
+
+		// easy case; check if cell is not quoted
+		if line[i]!=byte(quote) {
+			if idx_end := strings.Index(line[i:], string(delimiter)); idx_end==-1 {
+				token = line[i:N]
+				row = append(row, token)
+				i = N
+			} else {
+				token = line[i:i+idx_end]
+				row = append(row, token)
+				i += idx_end + 1
+			}
+			
+		} else {
+			i++
+			
+			// quoted cell, intermediate position
+			quoted_delim := string(quote) + string(delimiter)
+			if idx_end := strings.Index(line[i:], quoted_delim); idx_end!=-1 {
+				token = line[i:i+idx_end]
+				row = append(row, token)
+				i += idx_end + 2
+
+				// quoted cell, final position
+			} else {
+				if idx_end2 := strings.Index(line[i:], string(quote)); idx_end2!=-1 {
+					token = line[i:i+idx_end2]
+					row = append(row, token)
+					i += idx_end2 + 1
+
+					// quoted cell, unterminated quote
+				} else {
+					token = line[i:N]
+					row = append(row, token)
+					i = N
+				}
+			}
+		}
+	}
+
+	return row
+}
+
+func (reader *CSVReader) normalizeRow(row []string) ([]string) {
+	out := []string{}
+	N := len(row)
+	//fmt.Printf("norm: input=%v ncols=%v\n", row, reader.ncols)
+	for i:=0; i<reader.ncols; i++ {
+		idx := reader.column_map[i]
+		if idx>=N {
+			out = append(out, "")
+		} else {
+			out = append(out, row[idx])
+		}
+	}
+	return out
+}
+
+func findToken(token string, l []string) (int) {
+	for i,s := range(l) {
+		if token==s {
+			return i
+		}
+	}
+	return -1
+}
+
+func (reader *CSVReader) initializeHeader(row []string) {
+	if reader.columns == nil {
+		reader.columns = row
+	}
+
+	reader.column_map = nil
+	for _,col := range(reader.columns) {
+		idx := findToken(col, row)
+		if idx==-1 {
+			log.Fatal("specified column not found: ", col)
+		}
+		reader.header = append(reader.header, col)
+		reader.column_map = append(reader.column_map, idx)
+	}
+
+	if len(reader.header)==0 {
+		log.Fatal("None of the specified columns were found in the data")
+	}
+
+	reader.ncols = len(reader.header)
+}
+
 func (reader *CSVReader) ParseLine(line string) (row []string) {
+	row = tokenize(line, reader.delimiter, reader.quote)
+
 	if len(reader.header) == 0 {
-		reader.header = tokenize(line, reader.delimiter)
-		reader.ncols = len(reader.header)
+		reader.initializeHeader(row)
 		return nil
 	}
 
-	reader.row = tokenize(line, reader.delimiter)
-	reader.row = normalize(reader.row, reader.ncols)
-	return reader.row
+	row = reader.normalizeRow(row)
+	return row
 }

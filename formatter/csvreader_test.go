@@ -3,7 +3,6 @@ package tabulon
 import (
 	"testing"
 	"reflect"
-//	"fmt"
 )
 
 func Test_newReader(t *testing.T) {
@@ -17,20 +16,16 @@ func Test_newReader(t *testing.T) {
 
 	row := reader.ParseLine("h1,h2,h3")
 	if row != nil {
-		t.Error("header not read correctly")
+		t.Error("header read incorrect")
 	}
-	if len(reader.row)!=0 {
-		t.Error("row has old content")
+	row = reader.GetHeader()
+	expected := []string{"h1", "h2", "h3"}
+	if !reflect.DeepEqual(row, expected) {
+		t.Error("header not correct")
 	}
-
+	
 	row = reader.ParseLine("content1,content2,content3")
-	if len(reader.GetHeader())!=3 {
-		t.Error("header not read correctly")
-	}
-	if len(row)!=3 {
-		t.Error("row has incorrect content")
-	}
-	expected := []string{"content1", "content2", "content3"}
+	expected = []string{"content1", "content2", "content3"}
 	if !reflect.DeepEqual(row, expected) {
 		t.Error("row has incorrect content")
 	}
@@ -60,27 +55,48 @@ func Test_newReader(t *testing.T) {
 	}
 
 	row = reader.ParseLine(`"quote1","quote2","quote3","quote4"`)
-	if len(reader.GetHeader())!=3 {
-		t.Error("header not read correctly")
-	}
-	if len(row)!=3 {
-		t.Error("row has incorrect content")
-	}
 	expected = []string{"quote1", "quote2", "quote3"}
 	if !reflect.DeepEqual(row, expected) {
 		t.Error("row has incorrect content")
 	}
 
 	row = reader.ParseLine(`"quote1a,quote1b","quote2","quote3a,quote3b"`)
-	if len(reader.GetHeader())!=3 {
-		t.Error("header not read correctly")
-	}
-	if len(row)!=3 {
-		t.Error("row has incorrect content")
-	}
-	//fmt.Println(row)
 	expected = []string{"quote1a,quote1b", "quote2", "quote3a,quote3b"}
 	if !reflect.DeepEqual(row, expected) {
 		t.Error("row has incorrect content")
 	}
+
+	row = reader.ParseLine(`long1,"long2","long3"`)
+	if len(row)!=3 {
+		t.Error("row has incorrect content")
+	}
+	expected = []string{"long1", "long2", "long3"}
+	if !reflect.DeepEqual(row, expected) {
+		t.Error("row has incorrect content")
+	}	
+
+	row = reader.ParseLine(`|long1|,^long2^,"long3"`)
+	expected = []string{"|long1|", "^long2^", "long3"}
+	if !reflect.DeepEqual(row, expected) {
+		t.Error("row has incorrect content")
+	}
+
+	row = reader.ParseLine(`"DOMINO'S LIMITED","DMP","Consumer Services"`)
+	expected = []string{"DOMINO'S LIMITED", "DMP", "Consumer Services"}
+	if !reflect.DeepEqual(row, expected) {
+		t.Error("row has incorrect content")
+	}
+
+	row = reader.ParseLine(`long"1",long'2',long3`)
+	expected = []string{`long"1"`, `long'2'`, `long3`}
+	if !reflect.DeepEqual(row, expected) {
+		t.Error("row has incorrect content")
+	}
+
+	// unterminated quote
+	row = reader.ParseLine(`long1,"long2,long3`)
+	expected = []string{`long1`, `long2,long3`, ``}
+	if !reflect.DeepEqual(row, expected) {
+		t.Error("row has incorrect content")
+	}	
 }

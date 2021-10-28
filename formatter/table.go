@@ -23,6 +23,7 @@ type Table struct {
 	skip int
 	head int
 	tail int
+	columns []string
 }
 
 func NewTable() (Table) {
@@ -36,6 +37,7 @@ func NewTable() (Table) {
 		skip: 0,
 		head: -1,
 		tail: -1,
+		columns: nil,
 	}
 
 	return t
@@ -49,6 +51,7 @@ func (table *Table) Clear() {
 	table.skip = 0
 	table.head = -1
 	table.tail = -1
+	table.columns = nil
 }
 
 func (table *Table) SetMatch(m []string) {
@@ -81,6 +84,10 @@ func (table *Table) SetOutputDelimiter(d rune) {
 	table.output_delimiter = d
 }
 
+func (table *Table) SetColumns(c []string) {
+	table.columns = c
+}
+
 func (table *Table) calcLimits() {
 	ncols := len(table.header)
 	table.limits = make([]int, ncols)
@@ -95,7 +102,7 @@ func (table *Table) calcLimits() {
 	}
 }
 
-func filter_record(rec []string, t *Table) (bool) {
+func filterRow(rec []string, t *Table) (bool) {
 	if len(t.match) == 0 {
 		return false
 	}
@@ -116,6 +123,7 @@ func (table *Table) processFile(fd *os.File) {
 	scanner.Split(bufio.ScanLines)
 	reader := NewCSVReader()
 	reader.SetDelimiter(table.delimiter)
+	reader.SetColumns(table.columns)
 	head := table.head
 	tail := table.tail
 
@@ -132,7 +140,7 @@ func (table *Table) processFile(fd *os.File) {
 			continue
 		}
 
-		if filter_record(row, table) {
+		if filterRow(row, table) {
 			continue
 		}
 
@@ -165,7 +173,7 @@ func (table *Table) ReadStdin() {
 	table.calcLimits()
 }
 
-func guess_delimiter(fname string) (rune) {
+func guessDelimiter(fname string) (rune) {
 	if strings.Contains(fname, ".csv") {
 		return ','
 	} else if strings.Contains(fname, ".psv") {
@@ -192,7 +200,7 @@ func (table *Table) ReadFiles(files []string) {
 		}
 
 		if table.delimiter==0 {
-			table.delimiter = guess_delimiter(file)
+			table.delimiter = guessDelimiter(file)
 		}
 
 		table.processFile(fd)
