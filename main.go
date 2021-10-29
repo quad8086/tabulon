@@ -11,14 +11,14 @@ import (
 func main() {
 	var opts struct {
 		Stdin bool `short:"S" long:"stdin" description:"read from stdin"`
-		Match []string `short:"m" long:"match" description:"match string"`
+		Match []string `short:"m" long:"match" description:"match string (AND)"`
 		Plain bool `short:"p" long:"plain" description:"render to stdout as plaintext"`
 		CSV bool `short:"C" long:"csv" description:"render to stdout as csv"`
 		Skip int `short:"s" long:"skip" description:"skip N lines before load" default:"0"`
-		Delimiter string `short:"d" long:"delimiter" description:"set delimiter" default:""`
+		Delimiter string `short:"d" long:"delimiter" description:"set input delimiter" default:""`
 		OutputDelimiter string `short:"D" long:"output-delimiter" description:"set output delimiter" default:""`
-		Head int `short:"h" long:"head" description:"only handle N first lines of input" default:"-1"`
-		Tail int `short:"t" long:"tail" description:"only handle N last lines of input" default:"-1"`
+		Head int `short:"h" long:"head" description:"only consume N first lines of input" default:"-1"`
+		Tail int `short:"t" long:"tail" description:"only consume N last lines of input" default:"-1"`
 		List string `short:"l" long:"list-column" description:"output specified column as list" default:""`
 		TSV bool `long:"tsv" description:"force input delimiter to tab"`
 		SortColumn string `long:"sort-column" description:"sort by column" default:""`
