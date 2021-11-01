@@ -174,6 +174,7 @@ func (table *Table) ReadStdin() {
 }
 
 func guessDelimiter(fname string) (rune) {
+	fname = strings.ToLower(fname)
 	if strings.Contains(fname, ".csv") {
 		return ','
 	} else if strings.Contains(fname, ".psv") {
