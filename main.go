@@ -21,6 +21,7 @@ func main() {
 		Tail int `short:"t" long:"tail" description:"only consume N last lines of input" default:"-1"`
 		List string `short:"l" long:"list-column" description:"output specified column as list" default:""`
 		TSV bool `long:"tsv" description:"force input delimiter to tab"`
+		PSV bool `long:"psv" description:"force input delimiter to pipe"`
 		SortColumn string `long:"sort-column" description:"sort by column" default:""`
 		Reverse bool `long:"reverse" description:"reverse sort direction"`
 		Columns []string `short:"c" long:"columns" description:"only render specified columns"`
@@ -46,11 +47,13 @@ func main() {
 	table.SetHead(opts.Head)
 	table.SetTail(opts.Tail)
 	table.SetColumns(opts.Columns)
-	
+
 	if(len(opts.Delimiter)>0) {
 		table.SetDelimiter(rune(opts.Delimiter[0]))
 	} else if(opts.TSV) {
 		table.SetDelimiter('\t')
+	} else if(opts.PSV) {
+		table.SetDelimiter('|')
 	}
 
 	if(len(opts.OutputDelimiter)>0) {
