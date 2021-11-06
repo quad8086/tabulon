@@ -24,6 +24,7 @@ type Table struct {
 	skip int
 	head int
 	tail int
+	limit int
 	columns []string
 	match_interp mexpr.Interpreter
 }
@@ -39,6 +40,7 @@ func NewTable() (Table) {
 		skip: 0,
 		head: -1,
 		tail: -1,
+		limit: 0,
 		columns: nil,
 		match_interp: nil,
 	}
@@ -52,6 +54,10 @@ func (table *Table) SetMatch(m []string) {
 
 func (table *Table) SetSkip(skip int) {
 	table.skip = skip
+}
+
+func (table *Table) SetLimit(limit int) {
+	table.limit = limit
 }
 
 func (table *Table) SetMatchExpr(match_expr string) {
@@ -144,6 +150,7 @@ func (table *Table) processFile(fd *os.File) {
 	reader := NewCSVReader()
 	reader.SetDelimiter(table.delimiter)
 	reader.SetColumns(table.columns)
+	reader.SetLimit(table.limit)
 	head := table.head
 	tail := table.tail
 

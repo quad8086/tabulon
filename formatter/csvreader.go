@@ -13,10 +13,11 @@ type CSVReader struct {
 	quote rune
 	columns []string
 	column_map []int
+	limit int
 }
 
 func NewCSVReader() (CSVReader) {
-	r := CSVReader{nil, 0, ',', '"', nil, nil}
+	r := CSVReader{nil, 0, ',', '"', nil, nil, 0}
 	return r
 }
 
@@ -28,6 +29,10 @@ func (c *CSVReader) SetColumns(cols []string) {
 	c.columns = cols
 }
 
+func (c *CSVReader) SetLimit(limit int) {
+	c.limit = limit
+}
+
 func (c *CSVReader) GetHeader() ([]string) {
 	return c.header
 }
@@ -36,12 +41,20 @@ func (c *CSVReader) Reset() {
 	c.header = nil
 }
 
-func tokenize(line string, delimiter rune, quote rune) ([]string) {
+func (r *CSVReader) appendToken(row []string, token string) ([]string) {
+	if r.limit>0 && len(token)>r.limit {
+		token = token[0:r.limit]
+	}
+
+	return append(row, token)
+}
+
+func (r *CSVReader) tokenize(line string) ([]string) {
 	var row []string
 	var token string
 	i := 0
 	N := len(line)
-	
+
 	for {
 		// check and handle end of line
 		if i>= N {
@@ -49,38 +62,38 @@ func tokenize(line string, delimiter rune, quote rune) ([]string) {
 		}
 
 		// easy case; check if cell is not quoted
-		if line[i]!=byte(quote) {
-			if idx_end := strings.Index(line[i:], string(delimiter)); idx_end==-1 {
+		if line[i]!=byte(r.quote) {
+			if idx_end := strings.Index(line[i:], string(r.delimiter)); idx_end==-1 {
 				token = line[i:N]
-				row = append(row, token)
+				row = r.appendToken(row, token)
 				i = N
 			} else {
 				token = line[i:i+idx_end]
-				row = append(row, token)
+				row = r.appendToken(row, token)
 				i += idx_end + 1
 			}
-			
+
 		} else {
 			i++
-			
+
 			// quoted cell, intermediate position
-			quoted_delim := string(quote) + string(delimiter)
+			quoted_delim := string(r.quote) + string(r.delimiter)
 			if idx_end := strings.Index(line[i:], quoted_delim); idx_end!=-1 {
 				token = line[i:i+idx_end]
-				row = append(row, token)
+				row = r.appendToken(row, token)
 				i += idx_end + 2
 
 				// quoted cell, final position
 			} else {
-				if idx_end2 := strings.Index(line[i:], string(quote)); idx_end2!=-1 {
+				if idx_end2 := strings.Index(line[i:], string(r.quote)); idx_end2!=-1 {
 					token = line[i:i+idx_end2]
-					row = append(row, token)
+					row = r.appendToken(row, token)
 					i += idx_end2 + 1
 
 					// quoted cell, unterminated quote
 				} else {
 					token = line[i:N]
-					row = append(row, token)
+					row = r.appendToken(row, token)
 					i = N
 				}
 			}
@@ -90,12 +103,12 @@ func tokenize(line string, delimiter rune, quote rune) ([]string) {
 	return row
 }
 
-func (reader *CSVReader) normalizeRow(row []string) ([]string) {
+func (r *CSVReader) normalizeRow(row []string) ([]string) {
 	out := []string{}
 	N := len(row)
-	//fmt.Printf("norm: input=%v ncols=%v\n", row, reader.ncols)
-	for i:=0; i<reader.ncols; i++ {
-		idx := reader.column_map[i]
+	//fmt.Printf("norm: input=%v ncols=%v\n", row, r.ncols)
+	for i:=0; i<r.ncols; i++ {
+		idx := r.column_map[i]
 		if idx>=N {
 			out = append(out, "")
 		} else {
@@ -114,36 +127,36 @@ func findToken(token string, l []string) (int) {
 	return -1
 }
 
-func (reader *CSVReader) initializeHeader(row []string) {
-	if reader.columns == nil {
-		reader.columns = row
+func (r *CSVReader) initializeHeader(row []string) {
+	if r.columns == nil {
+		r.columns = row
 	}
 
-	reader.column_map = nil
-	for _,col := range(reader.columns) {
+	r.column_map = nil
+	for _,col := range(r.columns) {
 		idx := findToken(col, row)
 		if idx==-1 {
 			log.Fatal("specified column not found: ", col)
 		}
-		reader.header = append(reader.header, col)
-		reader.column_map = append(reader.column_map, idx)
+		r.header = append(r.header, col)
+		r.column_map = append(r.column_map, idx)
 	}
 
-	if len(reader.header)==0 {
+	if len(r.header)==0 {
 		log.Fatal("None of the specified columns were found in the data")
 	}
 
-	reader.ncols = len(reader.header)
+	r.ncols = len(r.header)
 }
 
-func (reader *CSVReader) ParseLine(line string) (row []string) {
-	row = tokenize(line, reader.delimiter, reader.quote)
+func (r *CSVReader) ParseLine(line string) (row []string) {
+	row = r.tokenize(line)
 
-	if len(reader.header) == 0 {
-		reader.initializeHeader(row)
+	if len(r.header) == 0 {
+		r.initializeHeader(row)
 		return nil
 	}
 
-	row = reader.normalizeRow(row)
+	row = r.normalizeRow(row)
 	return row
 }
