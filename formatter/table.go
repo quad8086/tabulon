@@ -43,17 +43,6 @@ func NewTable() (Table) {
 	return t
 }
 
-func (table *Table) Clear() {
-	table.header = nil
-	table.content = nil
-	table.nrows = 0
-	table.ncols = 0
-	table.skip = 0
-	table.head = -1
-	table.tail = -1
-	table.columns = nil
-}
-
 func (table *Table) SetMatch(m []string) {
 	table.match = m
 }
@@ -163,16 +152,6 @@ func (table *Table) processFile(fd *os.File) {
 	table.nrows = len(table.content)
 }
 
-func (table *Table) ReadStdin() {
-	table.Clear()
-	table.description = "stdin"
-	if table.delimiter==0 {
-		table.delimiter = ','
-	}
-	table.processFile(os.Stdin)
-	table.calcLimits()
-}
-
 func guessDelimiter(fname string) (rune) {
 	fname = strings.ToLower(fname)
 	if strings.Contains(fname, ".csv") {
@@ -184,6 +163,16 @@ func guessDelimiter(fname string) (rune) {
 	}
 
 	return ','
+}
+
+func (table *Table) ReadStdin() {
+	table.description = "stdin"
+	if table.delimiter==0 {
+		table.delimiter = ','
+	}
+
+	table.processFile(os.Stdin)
+	table.calcLimits()
 }
 
 func (table *Table) ReadFiles(files []string) {
