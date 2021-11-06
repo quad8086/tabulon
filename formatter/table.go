@@ -8,6 +8,7 @@ import (
 	"path"
 	"sort"
 	"strconv"
+	"github.com/danielgtaylor/mexpr"
 )
 
 type Table struct {
@@ -24,6 +25,7 @@ type Table struct {
 	head int
 	tail int
 	columns []string
+	match_interp mexpr.Interpreter
 }
 
 func NewTable() (Table) {
@@ -38,6 +40,7 @@ func NewTable() (Table) {
 		head: -1,
 		tail: -1,
 		columns: nil,
+		match_interp: nil,
 	}
 
 	return t
@@ -49,6 +52,17 @@ func (table *Table) SetMatch(m []string) {
 
 func (table *Table) SetSkip(skip int) {
 	table.skip = skip
+}
+
+func (table *Table) SetMatchExpr(match_expr string) {
+	l := mexpr.NewLexer(match_expr)
+	p := mexpr.NewParser(l)
+	ast, err := p.Parse()
+	if err != nil {
+		log.Fatal("filterRow: invalid expression: ", match_expr)
+	}
+
+	table.match_interp = mexpr.NewInterpreter(ast)
 }
 
 func (table *Table) SetHead(head int) {
@@ -92,14 +106,31 @@ func (table *Table) calcLimits() {
 }
 
 func filterRow(rec []string, t *Table) (bool) {
-	if len(t.match) == 0 {
-		return false
+	if t.match_interp != nil {
+		vars := make(map[string]interface{})
+		for i,h := range(t.header) {
+			v, err := strconv.ParseFloat(rec[i], 32)
+			if err == nil {
+				vars[h] = v
+			} else {
+				vars[h] = rec[i]
+			}
+		}
+
+		result, err := t.match_interp.Run(vars)
+		if err != nil {
+			return true
+		}
+
+		return result==false
 	}
 
-	line := strings.Join(rec, string(t.delimiter))
-	for _,m := range(t.match) {
-		if !strings.Contains(line, m) {
-			return true
+	if len(t.match) > 0 {
+		line := strings.Join(rec, string(t.delimiter))
+		for _,m := range(t.match) {
+			if !strings.Contains(line, m) {
+				return true
+			}
 		}
 	}
 

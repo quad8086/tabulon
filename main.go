@@ -12,6 +12,7 @@ func main() {
 	var opts struct {
 		Stdin bool `short:"S" long:"stdin" description:"read from stdin"`
 		Match []string `short:"m" long:"match" description:"match string (AND)"`
+		Expr string `short:"e" long:"expr" description:"match on expression"`
 		Plain bool `short:"p" long:"plain" description:"render to stdout as plaintext"`
 		CSV bool `short:"C" long:"csv" description:"render to stdout as csv"`
 		Skip int `short:"s" long:"skip" description:"skip N lines before load" default:"0"`
@@ -48,11 +49,15 @@ func main() {
 	table.SetTail(opts.Tail)
 	table.SetColumns(opts.Columns)
 
-	if(len(opts.Delimiter)>0) {
+	if len(opts.Expr)>0 {
+		table.SetMatchExpr(opts.Expr)
+	}
+
+	if len(opts.Delimiter)>0 {
 		table.SetDelimiter(rune(opts.Delimiter[0]))
-	} else if(opts.TSV) {
+	} else if opts.TSV {
 		table.SetDelimiter('\t')
-	} else if(opts.PSV) {
+	} else if opts.PSV {
 		table.SetDelimiter('|')
 	}
 
@@ -66,7 +71,7 @@ func main() {
 		table.ReadFiles(files)
 	}
 
-	if(len(opts.SortColumn)>0) {
+	if len(opts.SortColumn)>0 {
 		idx := table.FindColumn(opts.SortColumn)
 		if idx==-1 {
 			fmt.Println("No such column="+opts.SortColumn)

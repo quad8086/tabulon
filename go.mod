@@ -7,4 +7,5 @@ require (
 	github.com/gdamore/tcell/v2 v2.2.0 // indirect
 	github.com/jessevdk/go-flags v1.5.0 // indirect
 	github.com/mattn/go-runewidth v0.0.10 // indirect
+	github.com/danielgtaylor/mexpr v1.3.0
 )
