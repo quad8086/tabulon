@@ -10,7 +10,7 @@ import (
 
 func main() {
 	var opts struct {
-		Stdin bool `short:"S" long:"stdin" description:"read from stdin"`
+		Stdin bool `short:"S" long:"stdin" description:"read from stdin rather than files"`
 		Match []string `short:"m" long:"match" description:"match string (AND)"`
 		Expr string `short:"e" long:"expr" description:"match on expression"`
 		Plain bool `short:"p" long:"plain" description:"render to stdout as plaintext"`
@@ -21,6 +21,7 @@ func main() {
 		Head int `short:"h" long:"head" description:"only consume N first lines of input" default:"-1"`
 		Tail int `short:"t" long:"tail" description:"only consume N last lines of input" default:"-1"`
 		List string `short:"l" long:"list-column" description:"output specified column as list" default:""`
+		Unique string `short:"u" long:"unique" description:"output unique values of specified column as list" default:""`
 		TSV bool `long:"tsv" description:"force input delimiter to tab"`
 		PSV bool `long:"psv" description:"force input delimiter to pipe"`
 		SortColumn string `long:"sort-column" description:"sort by column" default:""`
@@ -87,6 +88,8 @@ func main() {
 
 	if len(opts.List)>0 {
 		table.RenderList(opts.List)
+	} else if len(opts.Unique)>0 {
+		table.RenderUnique(opts.Unique)
 	} else if opts.CSV {
 		table.RenderCSV()
 	} else if opts.Plain || opts.Stdin {

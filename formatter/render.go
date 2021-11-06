@@ -46,3 +46,25 @@ func (table *Table) RenderList(col string) {
 
 	fmt.Println(output)
 }
+
+func (table *Table) RenderUnique(col string) {
+	idx := table.FindColumn(col)
+	if idx == -1 {
+		log.Fatal("RenderUnique: no such column="+col)
+	}
+
+	set := make(map[string]bool)
+	for _,row := range(table.content) {
+		set[row[idx]] = true
+	}
+	var output string
+	for k,_ := range(set) {
+		if len(output)>0 {
+			output += string(table.output_delimiter)
+		}
+
+		output += k
+	}
+
+	fmt.Println(output)
+}
