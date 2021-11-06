@@ -30,7 +30,7 @@ func main() {
 
 	args, err := flags.ParseArgs(&opts, os.Args)
 	if err != nil {
-		panic(err)
+		return
 	}
 
 	files:=args[1:]
