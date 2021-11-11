@@ -98,5 +98,17 @@ func Test_newReader(t *testing.T) {
 	expected = []string{`long1`, `long2,long3`, ``}
 	if !reflect.DeepEqual(row, expected) {
 		t.Error("row has incorrect content")
-	}	
+	}
+
+	row = reader.ParseLine(`,cell2,cell3`)
+	expected = []string{``, `cell2`, `cell3`}
+	if !reflect.DeepEqual(row, expected) {
+		t.Error("empty first cell row: incorrect")
+	}
+	
+	row = reader.ParseLine(`"",cell2,cell3`)
+	expected = []string{``, `cell2`, `cell3`}
+	if !reflect.DeepEqual(row, expected) {
+		t.Error("empty quoted first cell row: incorrect")
+	}
 }

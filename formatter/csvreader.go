@@ -3,7 +3,6 @@ package tabulon
 import (
 	"strings"
 	"log"
-//	"fmt"
 )
 
 type CSVReader struct {
