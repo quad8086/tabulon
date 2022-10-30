@@ -49,6 +49,10 @@ func NewTable() (Table) {
 	return t
 }
 
+func (table *Table) IsEmpty() bool {
+	return len(table.content) == 0
+}
+
 func (table *Table) SetMatch(m []string) {
 	table.match = m
 }
@@ -234,9 +238,14 @@ func (table *Table) ReadFiles(files []string) {
 	table.description = path.Base(files[0])
 
 	for _,file := range files {
+		fi, err := os.Stat(file)
+		if err != nil && !fi.Mode().IsRegular() {
+			continue
+		}
+
 		fd, err := os.Open(file)
 		if err != nil {
-			log.Fatal(err)
+			continue
 		}
 
 		if table.delimiter==0 {

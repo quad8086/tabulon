@@ -76,6 +76,11 @@ func main() {
 		table.ReadFiles(files)
 	}
 
+	if table.IsEmpty() {
+		fmt.Println("no data loaded")
+		os.Exit(1)
+	}
+
 	if len(opts.SortColumn)>0 {
 		idx := table.FindColumn(opts.SortColumn)
 		if idx==-1 {
