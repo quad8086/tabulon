@@ -23,7 +23,7 @@ func Test_newReader(t *testing.T) {
 	if !reflect.DeepEqual(row, expected) {
 		t.Error("header not correct")
 	}
-	
+
 	row = reader.ParseLine("content1,content2,content3")
 	expected = []string{"content1", "content2", "content3"}
 	if !reflect.DeepEqual(row, expected) {
@@ -73,7 +73,7 @@ func Test_newReader(t *testing.T) {
 	expected = []string{"long1", "long2", "long3"}
 	if !reflect.DeepEqual(row, expected) {
 		t.Error("row has incorrect content")
-	}	
+	}
 
 	row = reader.ParseLine(`|long1|,^long2^,"long3"`)
 	expected = []string{"|long1|", "^long2^", "long3"}
@@ -105,7 +105,7 @@ func Test_newReader(t *testing.T) {
 	if !reflect.DeepEqual(row, expected) {
 		t.Error("empty first cell row: incorrect")
 	}
-	
+
 	row = reader.ParseLine(`"",cell2,cell3`)
 	expected = []string{``, `cell2`, `cell3`}
 	if !reflect.DeepEqual(row, expected) {

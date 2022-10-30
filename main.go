@@ -51,7 +51,7 @@ func main() {
 	table.SetTail(opts.Tail)
 	table.SetColumns(opts.Columns)
 	table.SetLimit(opts.Limit)
-	
+		
 	if len(opts.Expr)>0 {
 		table.SetMatchExpr(opts.Expr)
 	}

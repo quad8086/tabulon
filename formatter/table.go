@@ -134,7 +134,7 @@ func filterRow(rec []string, t *Table) (bool) {
 	if len(t.match) > 0 {
 		line := strings.Join(rec, string(t.delimiter))
 		for _,m := range(t.match) {
-			if !strings.Contains(line, m) {
+			if strings.Compare(line, m)==0 {
 				return true
 			}
 		}
