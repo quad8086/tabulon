@@ -27,7 +27,7 @@ type Table struct {
 	tail int
 	limit int
 	columns []string
-	match_interp mexpr.Interpreter
+	match_parser mexpr.Interpreter
 }
 
 func NewTable() (Table) {
@@ -43,7 +43,7 @@ func NewTable() (Table) {
 		tail: -1,
 		limit: 0,
 		columns: nil,
-		match_interp: nil,
+		match_parser: nil,
 	}
 
 	return t
@@ -73,7 +73,7 @@ func (table *Table) SetMatchExpr(match_expr string) {
 		log.Fatal("filterRow: invalid expression: ", match_expr)
 	}
 
-	table.match_interp = mexpr.NewInterpreter(ast)
+	table.match_parser = mexpr.NewInterpreter(ast)
 }
 
 func (table *Table) SetHead(head int) {
@@ -135,7 +135,7 @@ func acceptRow(rec []string, t *Table) (bool) {
 		}
 	}
 
-	if t.match_interp != nil {
+	if t.match_parser != nil {
 		vars := make(map[string]interface{})
 		for i,h := range(t.header) {
 			v, err := strconv.ParseFloat(rec[i], 32)
@@ -146,8 +146,8 @@ func acceptRow(rec []string, t *Table) (bool) {
 			}
 		}
 
-		result, err := t.match_interp.Run(vars)
-		if err != nil && result==false {
+		result, err := t.match_parser.Run(vars)
+		if err == nil && result==false {
 			return false
 		}
 	}
