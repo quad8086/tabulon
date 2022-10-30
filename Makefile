@@ -26,3 +26,6 @@ clean:
 install:
 	mkdir -p $(INSTALL_DIR)/bin
 	install --mode 755 $(TARGET) $(INSTALL_DIR)/bin
+
+test:
+	cd formatter && go test
