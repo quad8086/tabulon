@@ -13,6 +13,7 @@ func main() {
 		Stdin bool `short:"S" long:"stdin" description:"read from stdin rather than files"`
 		Limit int `short:"L" long:"limit" description:"limit cell content length to N"`
 		Match []string `short:"m" long:"match" description:"match string (AND)"`
+		Remove []string `short:"r" long:"remove" description:"remove string (AND)"`
 		Expr string `short:"e" long:"expr" description:"match on expression"`
 		Plain bool `short:"p" long:"plain" description:"render to stdout as plaintext"`
 		CSV bool `short:"C" long:"csv" description:"render to stdout as csv"`
@@ -46,12 +47,13 @@ func main() {
 
 	table := tabulon.NewTable()
 	table.SetMatch(opts.Match)
+	table.SetRemove(opts.Remove)
 	table.SetSkip(opts.Skip)
 	table.SetHead(opts.Head)
 	table.SetTail(opts.Tail)
 	table.SetColumns(opts.Columns)
 	table.SetLimit(opts.Limit)
-		
+
 	if len(opts.Expr)>0 {
 		table.SetMatchExpr(opts.Expr)
 	}

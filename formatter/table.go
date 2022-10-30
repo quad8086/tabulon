@@ -15,6 +15,7 @@ type Table struct {
 	header []string
 	content [][]string
 	match []string
+	remove []string
 	delimiter rune
 	output_delimiter rune
 	nrows int
@@ -50,6 +51,10 @@ func NewTable() (Table) {
 
 func (table *Table) SetMatch(m []string) {
 	table.match = m
+}
+
+func (table *Table) SetRemove(m []string) {
+	table.remove = m
 }
 
 func (table *Table) SetSkip(skip int) {
@@ -111,7 +116,25 @@ func (table *Table) calcLimits() {
 	}
 }
 
-func filterRow(rec []string, t *Table) (bool) {
+func acceptRow(rec []string, t *Table) (bool) {
+	if len(t.remove) > 0 {
+		line := strings.Join(rec, string(t.delimiter))
+		for _,m := range(t.remove) {
+			if strings.Contains(line, m) {
+				return false
+			}
+		}
+	}
+
+	if len(t.match) > 0 {
+		line := strings.Join(rec, string(t.delimiter))
+		for _,m := range(t.match) {
+			if !strings.Contains(line, m) {
+				return false
+			}
+		}
+	}
+
 	if t.match_interp != nil {
 		vars := make(map[string]interface{})
 		for i,h := range(t.header) {
@@ -124,23 +147,12 @@ func filterRow(rec []string, t *Table) (bool) {
 		}
 
 		result, err := t.match_interp.Run(vars)
-		if err != nil {
-			return true
-		}
-
-		return result==false
-	}
-
-	if len(t.match) > 0 {
-		line := strings.Join(rec, string(t.delimiter))
-		for _,m := range(t.match) {
-			if strings.Compare(line, m)==0 {
-				return true
-			}
+		if err != nil && result==false {
+			return false
 		}
 	}
 
-	return false
+	return true
 }
 
 func (table *Table) processFile(fd *os.File) {
@@ -167,7 +179,7 @@ func (table *Table) processFile(fd *os.File) {
 			continue
 		}
 
-		if filterRow(row, table) {
+		if !acceptRow(row, table) {
 			continue
 		}
 
